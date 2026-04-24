@@ -5,19 +5,59 @@ Mulituple ingredients are accepted as a tuple.
 """
 
 recipes = {
-    ("egg", "rice"): "オムライス",
-    ("rice", "tofu"): "豆腐丼",
-    ("egg",): "オムレツ",
-    ("rice",): "チャーハン",
-    ("tofu",): "麻婆豆腐"
+
+    ("egg", "rice"): {
+
+        "name": "オムライス",
+
+        "calories": 550
+
+    },
+
+    ("rice", "tofu"): {
+
+        "name": "豆腐丼",
+
+        "calories": 500
+
+    },
+
+    ("egg",): {
+
+        "name": "オムレツ",
+
+        "calories": 250
+
+    },
+
+    ("rice",): {
+
+        "name": "チャーハン",
+
+        "calories": 400
+
+    },
+
+    ("tofu",): {
+
+        "name": "麻婆豆腐",
+
+        "calories": 300
+
+    }
+
 }
-
-
 def suggest_recipe(ingredients):
     key = tuple(sorted(ingredients))
-    return recipes.get(key, "ごめん、その材料のレシピはまだない 😢")
 
-
+    if key in recipes:
+        recipe = recipes[key]
+        name = recipe["name"]
+        calories = recipe["calories"]
+        return f"{name}（{calories}kcal）"
+    else:
+        return "ごめん、見つからない 😢"
+    
 def main():
     ingredients = input("材料をカンマで入力してね: ").split(",")
     ingredients = [i.strip().lower() for i in ingredients]
