@@ -56,7 +56,7 @@ def suggest_recipe(food):
 
     for key, value in recipes.items():
 
-        if all(i in food for i in key):
+        if any(i in food for i in key):
 
             name = value["name"]
 
