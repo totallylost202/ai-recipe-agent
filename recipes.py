@@ -1,6 +1,8 @@
 """
+
 Suggests a recipe based on user input of one or several ingredients.
-Mulituple ingredients are accepted as a tuple.
+
+Multiple ingredients are accepted as a tuple.
 
 """
 
@@ -47,24 +49,39 @@ recipes = {
     }
 
 }
-def suggest_recipe(ingredients):
-    key = tuple(sorted(ingredients))
 
-    if key in recipes:
-        recipe = recipes[key]
-        name = recipe["name"]
-        calories = recipe["calories"]
-        return f"{name}（{calories}kcal）"
+def suggest_recipe(food):
+
+    results = []
+
+    for key, value in recipes.items():
+
+        if all(i in food for i in key):
+
+            name = value["name"]
+
+            calories = value["calories"]
+
+            results.append(f"{name}は{calories}kcalです")
+
+    if results:
+
+        return "\n".join(results)
+
     else:
-        return "ごめん、見つからない 😢"
-    
+
+        return "Not found"
+
 def main():
-    ingredients = input("材料をカンマで入力してね: ").split(",")
-    ingredients = [i.strip().lower() for i in ingredients]
 
-    result = suggest_recipe(ingredients)
-    print(f"お勧めのレシピ： {result}")
+    food = input("Enter ingredients: ").split(",")
 
+    food = [i.strip().lower() for i in food]
+
+    result = suggest_recipe(food)
+
+    print(result)
 
 if __name__ == "__main__":
+
     main()
