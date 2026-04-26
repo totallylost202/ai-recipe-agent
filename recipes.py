@@ -52,6 +52,8 @@ recipes = {
 
 def suggest_recipe(food):
 
+    total_calories = 0
+
     results = []
 
     for key, value in recipes.items():
@@ -62,11 +64,14 @@ def suggest_recipe(food):
 
             calories = value["calories"]
 
+            total_calories += value["calories"]
+
             results.append(f"{name}は{calories}kcalです")
 
     if results:
-
+        results.append(f"合計：{total_calories}kcal")
         return "\n".join(results)
+    
 
     else:
 
