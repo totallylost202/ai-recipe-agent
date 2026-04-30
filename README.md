@@ -1,35 +1,65 @@
 # AI Recipe Agent
 
-A simple Python program that suggests recipes based on user input ingredients.
+A Python AI recipe assistant that suggests vegetarian recipes based on available ingredients, calorie limits, and shopping constraints.
 
 ## Features
-- Input ingredients (comma-separated)
-- Suggest recipes that match the ingredients
-- Supports multiple results
-- Calculates total calories
+
+- Suggests vegetarian recipes
+- Uses OpenAI API (gpt-4o-mini)
+- Supports:
+  - Available ingredients
+  - Calorie limits
+  - Maximum number of extra ingredients
+- Generates:
+  - Recipe suggestions
+  - Shopping lists for missing ingredients
+- Uses .env for secure API key storage
+
+---
 
 ## Example
 
-Input:
-egg
+### Input
 
-Output:
-オムレツは250kcalです オムライスは550kcalです 合計：800kcal
+text Ingredients: egg, rice Calorie limit: 600 Maximum extra ingredients: 2 
 
-## Tech
+### Output
+
+text Egg Fried Rice Bowl  Ingredients: - egg - rice - soy sauce - green onion  Instructions: 1. Cook the rice... 2. Fry the egg...  Shopping List: - soy sauce - green onion 
+
+---
+
+## Technologies Used
+
 - Python
-- Dictionary (nested)
-- Tuple keys
-- Loops and conditionals (any)
+- OpenAI API
+- dotenv (python-dotenv)
+- Dictionaries
+- Functions
+- Loops and conditionals
 
-## Learning Progress
-- Day1: Single ingredient lookup  
-- Day2: Multiple ingredients  
-- Day3: Tuple-based dictionary  
-- Day4: Nested dictionary (name + calories)  
-- Day5: Multiple results + total calories  
+---
+
+## Setup
+
+### 1. Install dependencies
+
+bash python3 -m pip install openai python-dotenv 
+
+### 2. Create a .env file
+
+text OPENAI_API_KEY=your_api_key_here 
+
+### 3. Run the app
+
+bash python3 recipes.py 
+
+---
 
 ## Future Improvements
-- Filter by calories
-- Add more recipes
-- AI-generated recipes
+
+- Protein filtering
+- Cuisine selection
+- Budget limits
+- JSON output formatting
+- Streamlit web interface
