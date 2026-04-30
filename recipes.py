@@ -44,7 +44,7 @@ def main():
 
     calorie_limit = int(input("Please set a calorie limit: ")) 
 
-    max_extra_ingredients = int(input("Please set the number of maximum ingredients you'd like to use: "))
+    max_extra_ingredients = int(input("Please set the maximum number of ingredients you'd like to use: "))
 
     food = [i.strip().lower() for i in food]
 
