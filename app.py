@@ -25,7 +25,7 @@ if st.button("Generate Recipe"):
 
         with st.spinner("Generating recipe..."):
 
-            result = suggest_recipe(
+            data = suggest_recipe(
 
                 food,
 
@@ -35,8 +35,29 @@ if st.button("Generate Recipe"):
 
             )
 
-        st.success(result)
+        if data["recipe"] == "Error":
+
+            st.error("Something went wrong. Please try again.")
+
+            st.write(data.get("raw_response"))
+        
+        else:
+        
+            st.success("Recipe generated!")
+
+            st.subheader(data["recipe"])
+
+            st.write(f'{data["calories"]} kcal')
+
+            st.write("Shopping List:")
+
+            for item in data["shopping_list"]:
+                st.write(f"- {item}")
+
+            st.write("Instructions:")
+
+            for step in data["instructions"]:
+                st.write(f"- {step}")
 
     else:
-
         st.error("Please enter ingredients.")
