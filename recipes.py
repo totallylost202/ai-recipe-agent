@@ -1,9 +1,3 @@
-from dotenv import load_dotenv
-
-from openai import OpenAI
-
-load_dotenv()
-
 """
 
 Suggests a recipe based on user input of one or several ingredients, a calorie limit, 
@@ -11,32 +5,88 @@ and a number of extra ingredients permitted.
 
 """
 
+from dotenv import load_dotenv
+
+from openai import OpenAI
+
+import json
+
+load_dotenv()
+
+client = OpenAI()
 
 def suggest_recipe(food, calorie_limit, max_extra_ingredients):
 
-        client = OpenAI()
+    ingredients_text = ", ".join(food)
 
-        ingredients_text = ", ".join(food)
+    prompt = f"""
+    Suggest a vegetarian recipe using: {ingredients_text}. 
+    The recipe must be under {calorie_limit} kcal. 
+    It can only contain up to {max_extra_ingredients} extra ingredients.
+    Create a shopping list of only the extra ingredients.
+    Include step-by-step cooking instructions.
 
-        prompt = f"""
-        Suggest a vegetarian recipe using: {ingredients_text}. 
-        The recipe must be under {calorie_limit} kcal. 
-        It can only contain up to {max_extra_ingredients} extra ingredients.
-        Create a shopping list of only the extra ingredients."""
+    Return the result in JSON format.
 
-        response = client.chat.completions.create(
+    Use this structure:
 
-            model="gpt-4o-mini",
+    {{
 
-            messages=[
+        "recipe": "",
 
-                {"role": "user", "content": prompt}
+        "calories": 0,
 
-            ]
+        "ingredients": [],
 
-        )
+        "shopping_list": [],
 
-        return response.choices[0].message.content
+        "instructions": []
+
+    }}
+
+    Return ONLY valid JSON.
+    Do not use markdown.
+    Do not use code blocks.
+
+    """
+
+    response = client.chat.completions.create(
+
+        model="gpt-4o-mini",
+
+        messages=[
+
+            {"role": "user", "content": prompt}
+
+        ]
+
+    )
+
+    content = response.choices[0].message.content
+
+    try:
+             
+        data = json.loads(content)
+
+        return data
+        
+    except json.JSONDecodeError:
+
+        return {
+
+            "recipe": "Error",
+
+            "calories": 0,
+
+            "ingredients": [],
+
+            "shopping_list": [],
+
+            "instructions": ["Failed to parse AI response."],
+
+             "raw_response": content
+
+        }
 
 def main():
 
