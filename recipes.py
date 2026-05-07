@@ -15,7 +15,7 @@ load_dotenv()
 
 client = OpenAI()
 
-def suggest_recipe(food, calorie_limit, max_extra_ingredients):
+def suggest_recipe(food, calorie_limit, max_extra_ingredients, cuisine, mood, difficulty):
 
     ingredients_text = ", ".join(food)
 
@@ -23,6 +23,10 @@ def suggest_recipe(food, calorie_limit, max_extra_ingredients):
     Suggest a vegetarian recipe using: {ingredients_text}. 
     The recipe must be under {calorie_limit} kcal. 
     It can only contain up to {max_extra_ingredients} extra ingredients.
+    The cuisine should be {cuisine}.
+    The cuisine should be: {cuisine}.
+    The mood/style should be: {mood}.
+    The difficulty should be: {difficulty}.
     Create a shopping list of only the extra ingredients.
     Include step-by-step cooking instructions.
 
@@ -96,9 +100,15 @@ def main():
 
     max_extra_ingredients = int(input("Please set the maximum number of ingredients you'd like to use: "))
 
+    cuisine = input("Please choose a cuisine: ")
+
+    mood = input("Mood: ")
+
+    difficulty = input("Difficulty: ")
+
     food = [i.strip().lower() for i in food]
 
-    result = suggest_recipe(food, calorie_limit, max_extra_ingredients)
+    result = suggest_recipe(food, calorie_limit, max_extra_ingredients, cuisine, mood, difficulty)
 
     print(result)
 
