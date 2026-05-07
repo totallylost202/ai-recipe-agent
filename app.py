@@ -17,6 +17,30 @@ extra_ingredients = st.number_input(
 
 )
 
+cuisine = st.selectbox(
+
+    "Cuisine",
+
+    ["Any", "Japanese", "Italian", "Indian", "Healthy"]
+
+)
+
+mood = st.selectbox(
+
+    "Mood",
+
+    ["Any", "Comfort food", "High protein", "Low calorie", "Quick meal", "Budget-friendly"]
+
+)
+
+difficulty = st.radio(
+
+    "Difficulty",
+
+    ["Easy", "Medium", "Hard"]
+
+)
+
 if st.button("Generate Recipe"):
 
     if ingredients:
@@ -31,7 +55,13 @@ if st.button("Generate Recipe"):
 
                 calorie_limit,
 
-                extra_ingredients
+                extra_ingredients,
+
+                cuisine,
+
+                mood,
+
+                difficulty
 
             )
 
