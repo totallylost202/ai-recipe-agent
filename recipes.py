@@ -15,6 +15,33 @@ load_dotenv()
 
 client = OpenAI()
 
+
+def parse_response(response):
+
+    content = response.choices[0].message.content
+
+    try:
+
+        return json.loads(content)
+
+    except json.JSONDecodeError:
+
+        return {
+
+            "recipe": "Error",
+
+            "calories": 0,
+
+            "ingredients": [],
+
+            "shopping_list": [],
+
+            "instructions": ["Failed to parse AI response."],
+
+            "raw_response": content
+
+        }
+
 def suggest_recipe(food, calorie_limit, max_extra_ingredients, cuisine, mood, difficulty):
 
     ingredients_text = ", ".join(food)
@@ -24,7 +51,6 @@ def suggest_recipe(food, calorie_limit, max_extra_ingredients, cuisine, mood, di
     The recipe must be under {calorie_limit} kcal. 
     It can only contain up to {max_extra_ingredients} extra ingredients.
     The cuisine should be {cuisine}.
-    The cuisine should be: {cuisine}.
     The mood/style should be: {mood}.
     The difficulty should be: {difficulty}.
     Create a shopping list of only the extra ingredients.
@@ -66,31 +92,51 @@ def suggest_recipe(food, calorie_limit, max_extra_ingredients, cuisine, mood, di
 
     )
 
-    content = response.choices[0].message.content
+    return parse_response(response)
+    
+def suggest_random_recipe():
+    prompt = f"""
+    Suggest a vegetarian recipe.
+    Create a shopping list of necessary ingredients.
+    Include step-by-step cooking instructions.
 
-    try:
-             
-        data = json.loads(content)
+    Return the result in JSON format.
 
-        return data
-        
-    except json.JSONDecodeError:
+    Use this structure:
 
-        return {
+    {{
 
-            "recipe": "Error",
+        "recipe": "",
 
-            "calories": 0,
+        "calories": 0,
 
-            "ingredients": [],
+        "ingredients": [],
 
-            "shopping_list": [],
+        "shopping_list": [],
 
-            "instructions": ["Failed to parse AI response."],
+        "instructions": []
 
-             "raw_response": content
+    }}
 
-        }
+    Return ONLY valid JSON.
+    Do not use markdown.
+    Do not use code blocks.
+
+    """
+
+    response = client.chat.completions.create(
+
+        model="gpt-4o-mini",
+
+        messages=[
+
+            {"role": "user", "content": prompt}
+
+        ]
+
+    )
+
+    return parse_response(response)
 
 def main():
 

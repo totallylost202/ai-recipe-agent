@@ -1,5 +1,37 @@
 import streamlit as st
-from recipes import suggest_recipe
+from recipes import suggest_recipe, suggest_random_recipe
+
+def display_recipe(data, extra_ingredients=None):
+    if data["recipe"] == "Error":
+        st.error("Something went wrong. Please try again.")
+        st.write(data.get("raw_response"))
+    else:
+        st.success("Recipe generated!")
+
+        st.subheader(data["recipe"])
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric("Calories", data["calories"])
+
+        st.subheader("🥕 Ingredients")
+
+        for item in data["ingredients"]:
+            st.write(f"- {item}")
+
+        if extra_ingredients is not None:
+            with col2:
+                st.metric("Extra ingredients", extra_ingredients)
+
+        st.subheader("🛒 Shopping List")
+        with st.expander("Show Shopping List"):
+            for item in data["shopping_list"]:
+                st.write(f"- {item}")
+
+        st.subheader("👩‍🍳 Instructions")
+        for step in data["instructions"]:
+            st.write(f"- {step}")
 
 st.title("AI Recipe Agent")
 
@@ -50,55 +82,24 @@ if st.button("Generate Recipe"):
         with st.spinner("Generating recipe..."):
 
             data = suggest_recipe(
-
                 food,
-
                 calorie_limit,
-
                 extra_ingredients,
-
                 cuisine,
-
                 mood,
-
                 difficulty
-
             )
 
-        if data["recipe"] == "Error":
-
-            st.error("Something went wrong. Please try again.")
-
-            st.write(data.get("raw_response"))
-        
-        else:
-        
-            st.success("Recipe generated!")
-
-            st.subheader(data["recipe"])
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-
-                st.metric("Calories", data["calories"])
-
-            with col2:
-
-                st.metric("Extra ingredients", extra_ingredients)
-
-            st.subheader("Shopping List:")
-
-            with st.expander("Shopping List"):
-
-                for item in data["shopping_list"]:
-
-                    st.write(f"- {item}")
-
-            st.subheader("Instructions:")
-
-            for step in data["instructions"]:
-                st.write(f"- {step}")
+        display_recipe(data, extra_ingredients)
 
     else:
         st.error("Please enter ingredients.")
+
+
+if st.button("🎲 Surprise Me"):
+
+    with st.spinner("Generating random recipe..."):
+
+        data = suggest_random_recipe()
+
+        display_recipe(data)
