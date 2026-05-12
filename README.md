@@ -10,6 +10,7 @@ A Python AI recipe assistant that suggests vegetarian recipes based on available
   - Available ingredients
   - Calorie limits
   - Maximum number of extra ingredients
+  - "Surprise Me" mode
 - Generates:
   - Recipe suggestions
   - Shopping lists for missing ingredients
