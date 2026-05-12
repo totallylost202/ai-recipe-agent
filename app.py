@@ -77,14 +77,25 @@ if st.button("Generate Recipe"):
 
             st.subheader(data["recipe"])
 
-            st.write(f'{data["calories"]} kcal')
+            col1, col2 = st.columns(2)
 
-            st.write("Shopping List:")
+            with col1:
 
-            for item in data["shopping_list"]:
-                st.write(f"- {item}")
+                st.metric("Calories", data["calories"])
 
-            st.write("Instructions:")
+            with col2:
+
+                st.metric("Extra ingredients", extra_ingredients)
+
+            st.subheader("Shopping List:")
+
+            with st.expander("Shopping List"):
+
+                for item in data["shopping_list"]:
+
+                    st.write(f"- {item}")
+
+            st.subheader("Instructions:")
 
             for step in data["instructions"]:
                 st.write(f"- {step}")
