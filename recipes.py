@@ -138,6 +138,24 @@ def suggest_random_recipe():
 
     return parse_response(response)
 
+
+def save_favorite(recipe_data):
+
+    try:
+        with open("favorites.json", "r") as f:
+            favorites = json.load(f)
+
+    except FileNotFoundError:
+        favorites = []
+
+    except json.JSONDecodeError:
+        favorites = []
+
+    favorites.append(recipe_data)
+
+    with open("favorites.json", "w") as f:
+        json.dump(favorites, f, indent=2)
+
 def main():
 
     food = input("Enter ingredients: ").split(",")

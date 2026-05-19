@@ -1,5 +1,5 @@
 import streamlit as st
-from recipes import suggest_recipe, suggest_random_recipe
+from recipes import suggest_recipe, suggest_random_recipe, save_favorite
 
 def display_recipe(data, extra_ingredients=None):
     if data["recipe"] == "Error":
@@ -32,6 +32,11 @@ def display_recipe(data, extra_ingredients=None):
         st.subheader("👩‍🍳 Instructions")
         for step in data["instructions"]:
             st.write(f"- {step}")
+
+        if st.button("Save recipe"):
+            save_favorite(data)
+            st.success("Recipe saved!")
+
 
 st.title("AI Recipe Agent")
 
