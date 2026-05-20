@@ -1,5 +1,5 @@
 import streamlit as st
-from recipes import suggest_recipe, suggest_random_recipe, save_favorite
+from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites
 
 def display_recipe(data, extra_ingredients=None):
     if data["recipe"] == "Error":
@@ -34,9 +34,21 @@ def display_recipe(data, extra_ingredients=None):
             st.write(f"- {step}")
 
         if st.button("Save recipe"):
-            save_favorite(data)
+            save_favorite(st.session_state["current_recipe"])
+            st.session_state["saved"] = True
+
+        if st.session_state.get("saved"):
             st.success("Recipe saved!")
 
+
+
+if "current_recipe" not in st.session_state:
+
+    st.session_state["current_recipe"] = None
+
+if "saved" not in st.session_state:
+
+    st.session_state["saved"] = False
 
 st.title("AI Recipe Agent")
 
@@ -95,7 +107,11 @@ if st.button("Generate Recipe"):
                 difficulty
             )
 
-        display_recipe(data, extra_ingredients)
+        
+        st.session_state["current_recipe"] = data
+
+        st.session_state["saved"] = False
+
 
     else:
         st.error("Please enter ingredients.")
@@ -107,4 +123,40 @@ if st.button("🎲 Surprise Me"):
 
         data = suggest_random_recipe()
 
-        display_recipe(data)
+        st.session_state["current_recipe"] = data
+
+        st.session_state["saved"] = False
+
+
+if st.session_state["current_recipe"]:
+
+    display_recipe(
+        st.session_state["current_recipe"],
+        extra_ingredients
+    )
+
+if st.button("Show saved recipes"):
+    favorites = load_favorites()
+    if favorites:
+        for recipe in favorites:
+            with st.expander(recipe["recipe"]):
+                st.write(f"🔥 {recipe['calories']} kcal")
+                st.subheader("🥕 Ingredients")
+                for item in recipe["ingredients"]:
+                    st.write(f"- {item}")
+                st.subheader("👩‍🍳 Instructions")
+                for step in recipe["instructions"]:
+                    st.write(f"- {step}")
+                st.subheader(f"🛒 Shopping List")
+                for item in recipe["shopping_list"]:
+                    st.write(f"- {item}")
+    else:
+        st.write("No saved recipes yet.")
+
+if st.button("🔄 Reset"):
+
+    st.session_state["current_recipe"] = None
+
+    st.session_state["saved"] = False
+
+    st.rerun()

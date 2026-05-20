@@ -156,6 +156,15 @@ def save_favorite(recipe_data):
     with open("favorites.json", "w") as f:
         json.dump(favorites, f, indent=2)
 
+def load_favorites():
+
+    try:
+        with open("favorites.json", "r") as f:
+            return json.load(f)
+        
+    except FileNotFoundError:
+        return []
+    
 def main():
 
     food = input("Enter ingredients: ").split(",")
