@@ -1,5 +1,5 @@
 import streamlit as st
-from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites
+from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites, delete_favorite
 
 def display_recipe(data, extra_ingredients=None):
     if data["recipe"] == "Error":
@@ -39,8 +39,6 @@ def display_recipe(data, extra_ingredients=None):
 
         if st.session_state.get("saved"):
             st.success("Recipe saved!")
-
-
 
 if "current_recipe" not in st.session_state:
 
@@ -135,10 +133,27 @@ if st.session_state["current_recipe"]:
         extra_ingredients
     )
 
-if st.button("Show saved recipes"):
+if st.button("🔄 Reset"):
+
+    st.session_state["current_recipe"] = None
+
+    st.session_state["saved"] = False
+
+    st.rerun()
+
+
+with st.expander("📚 Saved recipes"):
     favorites = load_favorites()
-    if favorites:
+    displayed_recipes = []
+    search_word = st.text_input("Search saved recipes")
+    if search_word:
         for recipe in favorites:
+            if search_word.lower() in recipe["recipe"].lower():
+                displayed_recipes.append(recipe)
+    else:
+        displayed_recipes = favorites
+    if displayed_recipes:
+        for recipe in displayed_recipes:
             with st.expander(recipe["recipe"]):
                 st.write(f"🔥 {recipe['calories']} kcal")
                 st.subheader("🥕 Ingredients")
@@ -150,13 +165,16 @@ if st.button("Show saved recipes"):
                 st.subheader(f"🛒 Shopping List")
                 for item in recipe["shopping_list"]:
                     st.write(f"- {item}")
+
+                if st.button(
+                    "Delete",
+                    key=f"delete_{recipe['recipe']}"
+                    ):
+
+                    delete_favorite(recipe["recipe"])
+
+                    st.success("Recipe deleted!")
+
+                    st.rerun()
     else:
-        st.write("No saved recipes yet.")
-
-if st.button("🔄 Reset"):
-
-    st.session_state["current_recipe"] = None
-
-    st.session_state["saved"] = False
-
-    st.rerun()
+        st.write("No matching recipes.")

@@ -165,6 +165,35 @@ def load_favorites():
     except FileNotFoundError:
         return []
     
+
+def delete_favorite(recipe_name):
+
+    try:
+
+        with open("favorites.json", "r") as f:
+
+            favorites = json.load(f)
+
+    except FileNotFoundError:
+
+        favorites = []
+
+    except json.JSONDecodeError:
+
+        favorites = []
+
+    new_favorites = []
+
+    for recipe in favorites:
+
+        if recipe["recipe"] != recipe_name:
+
+            new_favorites.append(recipe)
+
+    with open("favorites.json", "w") as f:
+
+        json.dump(new_favorites, f, indent=2)
+
 def main():
 
     food = input("Enter ingredients: ").split(",")
