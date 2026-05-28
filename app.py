@@ -10,19 +10,19 @@ def display_recipe(data, extra_ingredients=None):
 
         st.subheader(data["recipe"])
 
-        col1, col2 = st.columns(2)
+        metric_col1, metric_col2 = st.columns(2)
 
-        with col1:
+        with metric_col1:
             st.metric("Calories", data["calories"])
+
+        if extra_ingredients is not None: 
+            with metric_col2:
+                st.metric("Extra ingredients", extra_ingredients)
 
         st.subheader("🥕 Ingredients")
 
         for item in data["ingredients"]:
             st.write(f"- {item}")
-
-        if extra_ingredients is not None:
-            with col2:
-                st.metric("Extra ingredients", extra_ingredients)
 
         st.subheader("🛒 Shopping List")
         with st.expander("Show Shopping List"):
@@ -33,12 +33,21 @@ def display_recipe(data, extra_ingredients=None):
         for step in data["instructions"]:
             st.write(f"- {step}")
 
-        if st.button("Save recipe"):
+    if st.button("Save recipe"):
+        current_recipe_name = st.session_state["current_recipe"]["recipe"]
+        favorites = load_favorites()
+        already_saved = False
+        for recipe in favorites:
+            if recipe["recipe"] == current_recipe_name:
+                already_saved = True
+        if already_saved:
+            st.warning("Already saved!")
+        else:
             save_favorite(st.session_state["current_recipe"])
             st.session_state["saved"] = True
 
-        if st.session_state.get("saved"):
-            st.success("Recipe saved!")
+    if st.session_state.get("saved"):
+        st.success("Recipe saved!")
 
 if "current_recipe" not in st.session_state:
 
@@ -88,43 +97,44 @@ difficulty = st.radio(
 
 )
 
-if st.button("Generate Recipe"):
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("Generate Recipe"):
+        if ingredients:
 
-    if ingredients:
+            food = [i.strip().lower() for i in ingredients.split(",")]
 
-        food = [i.strip().lower() for i in ingredients.split(",")]
+            with st.spinner("Generating recipe..."):
 
-        with st.spinner("Generating recipe..."):
-
-            data = suggest_recipe(
-                food,
-                calorie_limit,
-                extra_ingredients,
-                cuisine,
-                mood,
-                difficulty
-            )
+                data = suggest_recipe(
+                    food,
+                    calorie_limit,
+                    extra_ingredients,
+                    cuisine,
+                    mood,
+                    difficulty
+                )
 
         
-        st.session_state["current_recipe"] = data
+            st.session_state["current_recipe"] = data
 
-        st.session_state["saved"] = False
-
-
-    else:
-        st.error("Please enter ingredients.")
+            st.session_state["saved"] = False
 
 
-if st.button("🎲 Surprise Me"):
+        else:
+            st.error("Please enter ingredients.")
 
-    with st.spinner("Generating random recipe..."):
 
-        data = suggest_random_recipe()
+with col2:
+    if st.button("🎲 Surprise Me"):
 
-        st.session_state["current_recipe"] = data
+        with st.spinner("Generating random recipe..."):
 
-        st.session_state["saved"] = False
+            data = suggest_random_recipe()
 
+            st.session_state["current_recipe"] = data
+
+            st.session_state["saved"] = False
 
 if st.session_state["current_recipe"]:
 
@@ -133,25 +143,42 @@ if st.session_state["current_recipe"]:
         extra_ingredients
     )
 
-if st.button("🔄 Reset"):
+with col3:
+    if st.button("🔄 Reset"):
 
-    st.session_state["current_recipe"] = None
+        st.session_state["current_recipe"] = None
 
-    st.session_state["saved"] = False
+        st.session_state["saved"] = False
 
-    st.rerun()
+        st.rerun()
 
 
 with st.expander("📚 Saved recipes"):
     favorites = load_favorites()
-    displayed_recipes = []
     search_word = st.text_input("Search saved recipes")
-    if search_word:
-        for recipe in favorites:
-            if search_word.lower() in recipe["recipe"].lower():
-                displayed_recipes.append(recipe)
-    else:
-        displayed_recipes = favorites
+    search_text = search_word.lower()
+
+    displayed_recipes = [
+        recipe
+        for recipe in favorites
+        if (
+            search_text in recipe["recipe"].lower()
+            or search_text in " ".join(recipe["ingredients"]).lower()
+        )
+    ]       
+
+    sort_order = st.selectbox(
+
+        "Order",
+            ["Low to High", "High to Low"]
+    )
+    
+    displayed_recipes = sorted(
+        displayed_recipes,
+        key=lambda recipe: recipe["calories"],
+        reverse=sort_order == "High to Low"
+    )
+
     if displayed_recipes:
         for recipe in displayed_recipes:
             with st.expander(recipe["recipe"]):
