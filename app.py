@@ -36,10 +36,10 @@ def display_recipe(data, extra_ingredients=None):
     if st.button("Save recipe"):
         current_recipe_name = st.session_state["current_recipe"]["recipe"]
         favorites = load_favorites()
-        already_saved = False
-        for recipe in favorites:
-            if recipe["recipe"] == current_recipe_name:
-                already_saved = True
+        already_saved = any(
+            recipe["recipe"] == current_recipe_name
+            for recipe in favorites
+        )
         if already_saved:
             st.warning("Already saved!")
         else:
@@ -73,27 +73,39 @@ extra_ingredients = st.number_input(
 
 )
 
-cuisine = st.selectbox(
+if "cuisine" not in st.session_state:
+    st.session_state["cuisine"] = "Any"
+st.selectbox(
 
     "Cuisine",
 
-    ["Any", "Japanese", "Italian", "Indian", "Healthy"]
+    ["Any", "Japanese", "Italian", "Indian", "Healthy"],
+
+    key="cuisine"
 
 )
 
-mood = st.selectbox(
+
+if "mood" not in st.session_state:
+    st.session_state["mood"] = "Any"
+st.selectbox(
 
     "Mood",
 
-    ["Any", "Comfort food", "High protein", "Low calorie", "Quick meal", "Budget-friendly"]
+    ["Any", "Comfort food", "High protein", "Low calorie", "Quick meal", "Budget-friendly"],
+
+    key="mood"
 
 )
-
-difficulty = st.radio(
+if "difficulty" not in st.session_state:
+    st.session_state["difficulty"] = "Easy"
+st.radio(
 
     "Difficulty",
 
-    ["Easy", "Medium", "Hard"]
+    ["Easy", "Medium", "Hard"],
+
+    key="difficulty"
 
 )
 
@@ -110,9 +122,9 @@ with col1:
                     food,
                     calorie_limit,
                     extra_ingredients,
-                    cuisine,
-                    mood,
-                    difficulty
+                    st.session_state["cuisine"],
+                    st.session_state["mood"],
+                    st.session_state["difficulty"]
                 )
 
         
@@ -155,8 +167,18 @@ with col3:
 
 with st.expander("📚 Saved recipes"):
     favorites = load_favorites()
-    search_word = st.text_input("Search saved recipes")
-    search_text = search_word.lower()
+    if "search_word" not in st.session_state:
+        st.session_state["search_word"] = ""
+
+    if "sort_order" not in st.session_state:
+        st.session_state["sort_order"] = "Low to High"
+
+    st.text_input(
+        "Search saved recipes",
+        key="search_word"
+    )
+
+    search_text = st.session_state["search_word"].lower()
 
     displayed_recipes = [
         recipe
@@ -167,16 +189,18 @@ with st.expander("📚 Saved recipes"):
         )
     ]       
 
-    sort_order = st.selectbox(
+    st.selectbox(
 
         "Order",
-            ["Low to High", "High to Low"]
+            ["Low to High", "High to Low"],
+
+            key="sort_order"
     )
     
     displayed_recipes = sorted(
         displayed_recipes,
         key=lambda recipe: recipe["calories"],
-        reverse=sort_order == "High to Low"
+        reverse=st.session_state["sort_order"] == "High to Low"
     )
 
     if displayed_recipes:

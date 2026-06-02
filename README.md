@@ -16,6 +16,7 @@ A Python AI recipe assistant that suggests vegetarian recipes based on available
   - Search saved recipes by name or ingredients
   - Sort saved recipes by calories
   - Delete saved recipes
+  - Use session state for recipe controls
 - Generates:
   - Recipe suggestions
   - Shopping lists for missing ingredients
