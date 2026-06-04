@@ -49,6 +49,22 @@ def display_recipe(data, extra_ingredients=None):
     if st.session_state.get("saved"):
         st.success("Recipe saved!")
 
+
+# Reset function for the app
+def reset_app():
+    st.session_state["current_recipe"] = None
+    st.session_state["saved"] = False
+    st.session_state["cuisine"] = "Any"
+    st.session_state["mood"] = "Any"
+    st.session_state["difficulty"] = "Easy"
+    st.session_state["ingredients"] = ""
+    st.session_state["calorie_limit"] = 100
+    st.session_state["extra_ingredients"] = 0
+
+def reset_favorites_search():
+    st.session_state["search_word"] = ""
+    st.session_state["sort_order"] = "Low to High"
+
 if "current_recipe" not in st.session_state:
 
     st.session_state["current_recipe"] = None
@@ -57,24 +73,44 @@ if "saved" not in st.session_state:
 
     st.session_state["saved"] = False
 
+
+if "calorie_limit" not in st.session_state:
+
+    st.session_state["calorie_limit"] = 100
+
+if "extra_ingredients" not in st.session_state:
+
+    st.session_state["extra_ingredients"] = 0
+
+if "ingredients" not in st.session_state:
+    st.session_state["ingredients"] = ""
+
+if "mood" not in st.session_state:
+    st.session_state["mood"] = "Any"
+
+if "difficulty" not in st.session_state:
+    st.session_state["difficulty"] = "Easy"
+
+if "cuisine" not in st.session_state:
+    st.session_state["cuisine"] = "Any"
+
 st.title("AI Recipe Agent")
 
-ingredients = st.text_input("Enter ingredients", placeholder="egg, rice, tofu")
+st.text_input("Enter ingredients", placeholder="egg, rice, tofu", key="ingredients")
 
-calorie_limit = st.number_input("Calorie limit", min_value=100, step=50)
+st.number_input("Calorie limit", min_value=100, step=50, key="calorie_limit")
 
-extra_ingredients = st.number_input(
+st.number_input(
 
     "Maximum extra ingredients",
 
     min_value=0,
 
-    step=1
+    step=1,
+
+    key="extra_ingredients"
 
 )
-
-if "cuisine" not in st.session_state:
-    st.session_state["cuisine"] = "Any"
 st.selectbox(
 
     "Cuisine",
@@ -85,9 +121,6 @@ st.selectbox(
 
 )
 
-
-if "mood" not in st.session_state:
-    st.session_state["mood"] = "Any"
 st.selectbox(
 
     "Mood",
@@ -97,8 +130,7 @@ st.selectbox(
     key="mood"
 
 )
-if "difficulty" not in st.session_state:
-    st.session_state["difficulty"] = "Easy"
+
 st.radio(
 
     "Difficulty",
@@ -112,16 +144,16 @@ st.radio(
 col1, col2, col3 = st.columns(3)
 with col1:
     if st.button("Generate Recipe"):
-        if ingredients:
+        if st.session_state["ingredients"]:
 
-            food = [i.strip().lower() for i in ingredients.split(",")]
+            food = [i.strip().lower() for i in st.session_state["ingredients"].split(",")]
 
             with st.spinner("Generating recipe..."):
 
                 data = suggest_recipe(
                     food,
-                    calorie_limit,
-                    extra_ingredients,
+                    st.session_state["calorie_limit"],
+                    st.session_state["extra_ingredients"],
                     st.session_state["cuisine"],
                     st.session_state["mood"],
                     st.session_state["difficulty"]
@@ -152,80 +184,84 @@ if st.session_state["current_recipe"]:
 
     display_recipe(
         st.session_state["current_recipe"],
-        extra_ingredients
+        st.session_state["extra_ingredients"]
     )
 
 with col3:
-    if st.button("🔄 Reset"):
-
-        st.session_state["current_recipe"] = None
-
-        st.session_state["saved"] = False
-
-        st.rerun()
+    st.button("🔄 Reset", on_click=reset_app, key="reset_app")
 
 
-with st.expander("📚 Saved recipes"):
-    favorites = load_favorites()
-    if "search_word" not in st.session_state:
-        st.session_state["search_word"] = ""
+def display_saved_recipes():
+    with st.expander("📚 Saved recipes"):
+        favorites = load_favorites()
 
-    if "sort_order" not in st.session_state:
-        st.session_state["sort_order"] = "Low to High"
+        if "search_word" not in st.session_state:
+            st.session_state["search_word"] = ""
 
-    st.text_input(
-        "Search saved recipes",
-        key="search_word"
-    )
+        if "sort_order" not in st.session_state:
+            st.session_state["sort_order"] = "Low to High"
 
-    search_text = st.session_state["search_word"].lower()
-
-    displayed_recipes = [
-        recipe
-        for recipe in favorites
-        if (
-            search_text in recipe["recipe"].lower()
-            or search_text in " ".join(recipe["ingredients"]).lower()
+        st.text_input(
+            "Search saved recipes",
+            key="search_word"
         )
-    ]       
 
-    st.selectbox(
+        search_text = st.session_state["search_word"].lower()
 
-        "Order",
+        displayed_recipes = [
+            recipe
+            for recipe in favorites
+            if (
+                search_text in recipe["recipe"].lower()
+                or search_text in " ".join(recipe["ingredients"]).lower()
+            )
+        ]
+
+        st.selectbox(
+            "Order",
             ["Low to High", "High to Low"],
-
             key="sort_order"
-    )
-    
-    displayed_recipes = sorted(
-        displayed_recipes,
-        key=lambda recipe: recipe["calories"],
-        reverse=st.session_state["sort_order"] == "High to Low"
-    )
+        )
 
-    if displayed_recipes:
-        for recipe in displayed_recipes:
-            with st.expander(recipe["recipe"]):
-                st.write(f"🔥 {recipe['calories']} kcal")
-                st.subheader("🥕 Ingredients")
-                for item in recipe["ingredients"]:
-                    st.write(f"- {item}")
-                st.subheader("👩‍🍳 Instructions")
-                for step in recipe["instructions"]:
-                    st.write(f"- {step}")
-                st.subheader(f"🛒 Shopping List")
-                for item in recipe["shopping_list"]:
-                    st.write(f"- {item}")
+        st.button(
+            "🔄 Reset saved filters",
+            on_click=reset_favorites_search,
+            key="reset_saved_filters"
+        )
 
-                if st.button(
-                    "Delete",
-                    key=f"delete_{recipe['recipe']}"
+        displayed_recipes = sorted(
+            displayed_recipes,
+            key=lambda recipe: recipe["calories"],
+            reverse=st.session_state["sort_order"] == "High to Low"
+        )
+
+        if displayed_recipes:
+            for recipe in displayed_recipes:
+                with st.expander(recipe["recipe"]):
+                    st.write(f"🔥 {recipe['calories']} kcal")
+
+                    st.subheader("🥕 Ingredients")
+                    for item in recipe["ingredients"]:
+                        st.write(f"- {item}")
+
+                    st.subheader("👩‍🍳 Instructions")
+                    for step in recipe["instructions"]:
+                        st.write(f"- {step}")
+
+                    st.subheader("🛒 Shopping List")
+                    for item in recipe["shopping_list"]:
+                        st.write(f"- {item}")
+
+                    if st.button(
+                        "Delete",
+                        key=f"delete_{recipe['recipe']}"
                     ):
+                        delete_favorite(recipe["recipe"])
+                        st.success("Recipe deleted!")
+                        st.rerun()
 
-                    delete_favorite(recipe["recipe"])
+        else:
+            st.write("No matching recipes.")
 
-                    st.success("Recipe deleted!")
 
-                    st.rerun()
-    else:
-        st.write("No matching recipes.")
+display_saved_recipes()
