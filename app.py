@@ -20,9 +20,9 @@ def display_recipe(data, extra_ingredients=None):
                 st.metric("Extra ingredients", extra_ingredients)
 
         st.subheader("🥕 Ingredients")
-
-        for item in data["ingredients"]:
-            st.write(f"- {item}")
+        with st.expander("Show ingredients"):
+            for item in data["ingredients"]:
+                st.write(f"- {item}")
 
         st.subheader("🛒 Shopping List")
         with st.expander("Show Shopping List"):
@@ -209,7 +209,7 @@ def display_saved_recipe_card(recipe):
                 st.write(f"- {item}")
 
         if st.button(
-            "Delete",
+            "🗑️ Delete recipe",
             key=f"delete_{recipe['recipe']}"
         ):
             delete_favorite(recipe["recipe"])
