@@ -33,21 +33,21 @@ def display_recipe(data, extra_ingredients=None):
         for step in data["instructions"]:
             st.write(f"- {step}")
 
-    if st.button("Save recipe"):
-        current_recipe_name = st.session_state["current_recipe"]["recipe"]
-        favorites = load_favorites()
-        already_saved = any(
-            recipe["recipe"] == current_recipe_name
-            for recipe in favorites
-        )
-        if already_saved:
-            st.warning("Already saved!")
-        else:
-            save_favorite(st.session_state["current_recipe"])
-            st.session_state["saved"] = True
+        if st.button("Save recipe"):
+            current_recipe_name = st.session_state["current_recipe"]["recipe"]
+            favorites = load_favorites()
+            already_saved = any(
+                recipe["recipe"] == current_recipe_name
+                for recipe in favorites
+            )
+            if already_saved:
+                st.warning("Already saved!")
+            else:
+                save_favorite(st.session_state["current_recipe"])
+                st.session_state["saved"] = True
 
-    if st.session_state.get("saved"):
-        st.success("Recipe saved!")
+        if st.session_state.get("saved"):
+            st.success("Recipe saved!")
 
 
 # Reset function for the app
@@ -190,78 +190,90 @@ if st.session_state["current_recipe"]:
 with col3:
     st.button("🔄 Reset", on_click=reset_app, key="reset_app")
 
+def display_saved_recipe_card(recipe):
+    with st.expander(recipe["recipe"]):
+        st.write(f"🔥 {recipe['calories']} kcal")
+
+        st.subheader("🥕 Ingredients")
+        with st.expander("Show Ingredients"):
+            for item in recipe["ingredients"]:
+                st.write(f"- {item}")
+
+        st.subheader("👩‍🍳 Instructions")
+        for step in recipe["instructions"]:
+            st.write(f"- {step}")
+
+        st.subheader("🛒 Shopping List")
+        with st.expander("Show Shopping List"):
+            for item in recipe["shopping_list"]:
+                st.write(f"- {item}")
+
+        if st.button(
+            "Delete",
+            key=f"delete_{recipe['recipe']}"
+        ):
+            delete_favorite(recipe["recipe"])
+            st.success("Recipe deleted!")
+            st.rerun()
 
 def display_saved_recipes():
-    with st.expander("📚 Saved recipes"):
-        favorites = load_favorites()
+    favorites = load_favorites()
+    if not favorites:
+        st.write("No saved recipes.")
+    else:
+        with st.expander(f"📚 Saved recipes ({len(favorites)})"):
 
-        if "search_word" not in st.session_state:
-            st.session_state["search_word"] = ""
+            if "search_word" not in st.session_state:
+                st.session_state["search_word"] = ""
 
-        if "sort_order" not in st.session_state:
-            st.session_state["sort_order"] = "Low to High"
+            if "sort_order" not in st.session_state:
+                st.session_state["sort_order"] = "Low to High"
 
-        st.text_input(
-            "Search saved recipes",
-            key="search_word"
-        )
-
-        search_text = st.session_state["search_word"].lower()
-
-        displayed_recipes = [
-            recipe
-            for recipe in favorites
-            if (
-                search_text in recipe["recipe"].lower()
-                or search_text in " ".join(recipe["ingredients"]).lower()
+            st.text_input(
+                "Search saved recipes",
+                key="search_word"
             )
-        ]
 
-        st.selectbox(
-            "Order",
-            ["Low to High", "High to Low"],
-            key="sort_order"
-        )
+            search_text = st.session_state["search_word"].lower()
 
-        st.button(
-            "🔄 Reset saved filters",
-            on_click=reset_favorites_search,
-            key="reset_saved_filters"
-        )
+            displayed_recipes = [
+                recipe
+                for recipe in favorites
+                if (
+                    search_text in recipe["recipe"].lower()
+                    or search_text in " ".join(recipe["ingredients"]).lower()
+                )
+            ]
 
-        displayed_recipes = sorted(
-            displayed_recipes,
-            key=lambda recipe: recipe["calories"],
-            reverse=st.session_state["sort_order"] == "High to Low"
-        )
+            st.selectbox(
+                "Order",
+                ["Low to High", "High to Low"],
+                key="sort_order"
+            )
 
-        if displayed_recipes:
-            for recipe in displayed_recipes:
-                with st.expander(recipe["recipe"]):
-                    st.write(f"🔥 {recipe['calories']} kcal")
+            st.button(
+                "🔄 Reset saved filters",
+                on_click=reset_favorites_search,
+                key="reset_saved_filters"
+            )
 
-                    st.subheader("🥕 Ingredients")
-                    for item in recipe["ingredients"]:
-                        st.write(f"- {item}")
+            displayed_recipes = sorted(
+                displayed_recipes,
+                key=lambda recipe: recipe["calories"],
+                reverse=st.session_state["sort_order"] == "High to Low"
+            )
 
-                    st.subheader("👩‍🍳 Instructions")
-                    for step in recipe["instructions"]:
-                        st.write(f"- {step}")
+            if displayed_recipes:
+                if search_text:
+                    if len(displayed_recipes) == 1:
+                        st.write("1 recipe found!")
+                    else:
+                        st.write(f"{len(displayed_recipes)} recipes found!")
 
-                    st.subheader("🛒 Shopping List")
-                    for item in recipe["shopping_list"]:
-                        st.write(f"- {item}")
-
-                    if st.button(
-                        "Delete",
-                        key=f"delete_{recipe['recipe']}"
-                    ):
-                        delete_favorite(recipe["recipe"])
-                        st.success("Recipe deleted!")
-                        st.rerun()
-
-        else:
-            st.write("No matching recipes.")
+                for recipe in displayed_recipes:
+                    display_saved_recipe_card(recipe)
+            else:
+                st.write("No matching recipes.")
 
 
 display_saved_recipes()
