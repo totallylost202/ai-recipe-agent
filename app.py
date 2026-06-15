@@ -242,6 +242,7 @@ def display_saved_recipes():
                 if (
                     search_text in recipe["recipe"].lower()
                     or search_text in " ".join(recipe["ingredients"]).lower()
+                    or search_text in " ".join(recipe["shopping_list"]).lower()
                 )
             ]
 
