@@ -38,6 +38,8 @@ def parse_response(response):
 
             "instructions": ["Failed to parse AI response."],
 
+            "note": "",
+
             "raw_response": content
 
         }
@@ -165,6 +167,8 @@ def load_favorites():
     except FileNotFoundError:
         return []
     
+    except json.JSONDecodeError:
+        return []
 
 def delete_favorite(recipe_name):
 
@@ -193,6 +197,29 @@ def delete_favorite(recipe_name):
     with open("favorites.json", "w") as f:
 
         json.dump(new_favorites, f, indent=2)
+
+def add_note_to_favorite(recipe_name, note):
+
+    try:
+
+        with open("favorites.json", "r") as f:
+
+            favorites = json.load(f)
+
+    except FileNotFoundError:
+
+        favorites = []
+
+    except json.JSONDecodeError:
+
+        favorites = []
+
+    for recipe in favorites:
+        if recipe["recipe"] == recipe_name:
+            recipe["note"] = note
+        
+    with open("favorites.json", "w") as f:
+        json.dump(favorites, f, indent=2)
 
 def main():
 

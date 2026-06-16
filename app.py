@@ -1,5 +1,6 @@
 import streamlit as st
-from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites, delete_favorite
+from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites, delete_favorite, add_note_to_favorite
+
 
 def display_recipe(data, extra_ingredients=None):
     if data["recipe"] == "Error":
@@ -15,12 +16,12 @@ def display_recipe(data, extra_ingredients=None):
         with metric_col1:
             st.metric("Calories", data["calories"])
 
-        if extra_ingredients is not None: 
+        if extra_ingredients is not None:
             with metric_col2:
                 st.metric("Extra ingredients", extra_ingredients)
 
         st.subheader("🥕 Ingredients")
-        with st.expander("Show ingredients"):
+        with st.expander("Show Ingredients"):
             for item in data["ingredients"]:
                 st.write(f"- {item}")
 
@@ -44,10 +45,7 @@ def display_recipe(data, extra_ingredients=None):
                 st.warning("Already saved!")
             else:
                 save_favorite(st.session_state["current_recipe"])
-                st.session_state["saved"] = True
-
-        if st.session_state.get("saved"):
-            st.success("Recipe saved!")
+                st.toast("Recipe saved!")
 
 
 # Reset function for the app
@@ -61,25 +59,22 @@ def reset_app():
     st.session_state["calorie_limit"] = 100
     st.session_state["extra_ingredients"] = 0
 
+
 def reset_favorites_search():
     st.session_state["search_word"] = ""
     st.session_state["sort_order"] = "Low to High"
 
-if "current_recipe" not in st.session_state:
 
+if "current_recipe" not in st.session_state:
     st.session_state["current_recipe"] = None
 
 if "saved" not in st.session_state:
-
     st.session_state["saved"] = False
 
-
 if "calorie_limit" not in st.session_state:
-
     st.session_state["calorie_limit"] = 100
 
 if "extra_ingredients" not in st.session_state:
-
     st.session_state["extra_ingredients"] = 0
 
 if "ingredients" not in st.session_state:
@@ -101,55 +96,38 @@ st.text_input("Enter ingredients", placeholder="egg, rice, tofu", key="ingredien
 st.number_input("Calorie limit", min_value=100, step=50, key="calorie_limit")
 
 st.number_input(
-
     "Maximum extra ingredients",
-
     min_value=0,
-
     step=1,
-
     key="extra_ingredients"
-
 )
-st.selectbox(
 
+st.selectbox(
     "Cuisine",
-
     ["Any", "Japanese", "Italian", "Indian", "Healthy"],
-
     key="cuisine"
-
 )
 
 st.selectbox(
-
     "Mood",
-
     ["Any", "Comfort food", "High protein", "Low calorie", "Quick meal", "Budget-friendly"],
-
     key="mood"
-
 )
 
 st.radio(
-
     "Difficulty",
-
     ["Easy", "Medium", "Hard"],
-
     key="difficulty"
-
 )
 
 col1, col2, col3 = st.columns(3)
+
 with col1:
     if st.button("Generate Recipe"):
         if st.session_state["ingredients"]:
-
             food = [i.strip().lower() for i in st.session_state["ingredients"].split(",")]
 
             with st.spinner("Generating recipe..."):
-
                 data = suggest_recipe(
                     food,
                     st.session_state["calorie_limit"],
@@ -159,29 +137,19 @@ with col1:
                     st.session_state["difficulty"]
                 )
 
-        
             st.session_state["current_recipe"] = data
-
             st.session_state["saved"] = False
-
-
         else:
             st.error("Please enter ingredients.")
 
-
 with col2:
     if st.button("🎲 Surprise Me"):
-
         with st.spinner("Generating random recipe..."):
-
             data = suggest_random_recipe()
-
             st.session_state["current_recipe"] = data
-
             st.session_state["saved"] = False
 
 if st.session_state["current_recipe"]:
-
     display_recipe(
         st.session_state["current_recipe"],
         st.session_state["extra_ingredients"]
@@ -189,6 +157,7 @@ if st.session_state["current_recipe"]:
 
 with col3:
     st.button("🔄 Reset", on_click=reset_app, key="reset_app")
+
 
 def display_saved_recipe_card(recipe):
     with st.expander(recipe["recipe"]):
@@ -208,6 +177,21 @@ def display_saved_recipe_card(recipe):
             for item in recipe["shopping_list"]:
                 st.write(f"- {item}")
 
+        note_key = f"note_{recipe['recipe']}"
+
+        st.text_area(
+            "Note",
+            value=recipe.get("note", ""),
+            key=note_key
+        )
+
+        if st.button(
+            "Save note",
+            key=f"save_note_{recipe['recipe']}"
+        ):
+            add_note_to_favorite(recipe["recipe"], st.session_state[note_key])
+            st.toast("Note saved!")
+
         if st.button(
             "🗑️ Delete recipe",
             key=f"delete_{recipe['recipe']}"
@@ -215,6 +199,7 @@ def display_saved_recipe_card(recipe):
             delete_favorite(recipe["recipe"])
             st.success("Recipe deleted!")
             st.rerun()
+
 
 def display_saved_recipes():
     favorites = load_favorites()
