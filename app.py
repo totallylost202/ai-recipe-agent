@@ -1,5 +1,5 @@
 import streamlit as st
-from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites, delete_favorite, add_note_to_favorite
+from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites, delete_favorite, add_note_to_favorite, add_tags_to_favorite
 
 
 def display_recipe(data, extra_ingredients=None):
@@ -192,6 +192,24 @@ def display_saved_recipe_card(recipe):
             add_note_to_favorite(recipe["recipe"], st.session_state[note_key])
             st.toast("Note saved!")
 
+        tags_key = f"tags_{recipe['recipe']}"
+
+        st.text_input("Add tags", value=", ".join(recipe.get("tags", [])),  key=tags_key)
+
+
+        if st.button(
+            "Save tags",
+            key=f"save_tags_{recipe['recipe']}"
+        ):
+            tags = [
+                tag.strip()
+                for tag in st.session_state[tags_key].split(",")
+                if tag.strip()
+            ]
+
+            add_tags_to_favorite(recipe["recipe"], tags)
+            st.toast("Tags saved!")
+
         if st.button(
             "🗑️ Delete recipe",
             key=f"delete_{recipe['recipe']}"
@@ -228,6 +246,7 @@ def display_saved_recipes():
                     search_text in recipe["recipe"].lower()
                     or search_text in " ".join(recipe["ingredients"]).lower()
                     or search_text in " ".join(recipe["shopping_list"]).lower()
+                    or search_text in " ".join(recipe.get("tags", [])).lower()
                 )
             ]
 

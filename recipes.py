@@ -40,6 +40,8 @@ def parse_response(response):
 
             "note": "",
 
+            "tags": [],
+
             "raw_response": content
 
         }
@@ -220,6 +222,30 @@ def add_note_to_favorite(recipe_name, note):
         
     with open("favorites.json", "w") as f:
         json.dump(favorites, f, indent=2)
+
+def add_tags_to_favorite(recipe_name, tags):
+    try:
+
+        with open("favorites.json", "r") as f:
+
+            favorites = json.load(f)
+
+    except FileNotFoundError:
+
+        favorites = []
+
+    except json.JSONDecodeError:
+
+        favorites = []
+
+    for recipe in favorites:
+        if recipe["recipe"] == recipe_name:
+            recipe["tags"] = tags
+
+        
+    with open("favorites.json", "w") as f:
+        json.dump(favorites, f, indent=2)
+
 
 def main():
 
