@@ -246,7 +246,6 @@ def add_tags_to_favorite(recipe_name, tags):
     with open("favorites.json", "w") as f:
         json.dump(favorites, f, indent=2)
 
-
 def main():
 
     food = input("Enter ingredients: ").split(",")

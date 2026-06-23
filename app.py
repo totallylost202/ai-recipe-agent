@@ -196,6 +196,12 @@ def display_saved_recipe_card(recipe):
 
         st.text_input("Add tags", value=", ".join(recipe.get("tags", [])),  key=tags_key)
 
+        tags_list = recipe.get("tags", [])
+
+        if tags_list:
+            st.write("🏷️ " + " | ".join(tags_list))
+        else:
+            st.write("No tags yet.")
 
         if st.button(
             "Save tags",
@@ -213,7 +219,7 @@ def display_saved_recipe_card(recipe):
         if st.button(
             "🗑️ Delete recipe",
             key=f"delete_{recipe['recipe']}"
-        ):
+        ): 
             delete_favorite(recipe["recipe"])
             st.success("Recipe deleted!")
             st.rerun()
