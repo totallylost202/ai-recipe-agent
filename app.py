@@ -177,6 +177,8 @@ def display_saved_recipe_card(recipe):
             for item in recipe["shopping_list"]:
                 st.write(f"- {item}")
 
+        st.subheader("Personal Notes")
+
         note_key = f"note_{recipe['recipe']}"
 
         st.text_area(
@@ -185,16 +187,31 @@ def display_saved_recipe_card(recipe):
             key=note_key
         )
 
-        if st.button(
-            "Save note",
-            key=f"save_note_{recipe['recipe']}"
-        ):
-            add_note_to_favorite(recipe["recipe"], st.session_state[note_key])
-            st.toast("Note saved!")
+        col4, col5 = st.columns(2)
+
+        with col4:
+            if st.button(
+                "Save note",
+                key=f"save_note_{recipe['recipe']}"
+            ):
+                add_note_to_favorite(recipe["recipe"], st.session_state[note_key])
+                st.toast("Note saved!")
+
+        def clear_note():
+            add_note_to_favorite(recipe["recipe"], "")
+            st.session_state[note_key] = ""
+            st.toast("Note cleared.")
+
+        with col5:
+            st.button(
+                "Clear note",
+                on_click=clear_note,
+                key=f"clear_note_{recipe['recipe']}"
+            )
 
         tags_key = f"tags_{recipe['recipe']}"
 
-        st.text_input("Add tags", value=", ".join(recipe.get("tags", [])),  key=tags_key)
+        st.text_input("Add tags", value=", ".join(recipe.get("tags", [])), key=tags_key)
 
         tags_list = recipe.get("tags", [])
 
@@ -202,26 +219,40 @@ def display_saved_recipe_card(recipe):
             st.write("🏷️ " + " | ".join(tags_list))
         else:
             st.write("No tags yet.")
+        
+        col6, col7 = st.columns(2)
 
-        if st.button(
-            "Save tags",
-            key=f"save_tags_{recipe['recipe']}"
-        ):
-            tags = [
-                tag.strip()
-                for tag in st.session_state[tags_key].split(",")
-                if tag.strip()
-            ]
+        with col6:
+            if st.button(
+                "Save tags",
+                key=f"save_tags_{recipe['recipe']}"
+            ):
+                tags = [
+                    tag.strip()
+                    for tag in st.session_state[tags_key].split(",")
+                    if tag.strip()
+                ]
 
-            add_tags_to_favorite(recipe["recipe"], tags)
-            st.toast("Tags saved!")
+                add_tags_to_favorite(recipe["recipe"], tags)
+                st.toast("Tags saved!")
+
+        def clear_tags():
+            add_tags_to_favorite(recipe["recipe"], [])
+            st.session_state[tags_key] = ""
+            st.toast("Tags cleared.")
+
+        with col7:
+            st.button(
+                "Clear tags",
+                on_click=clear_tags,
+                key=f"clear_tags_{recipe['recipe']}"
+            )
 
         if st.button(
             "🗑️ Delete recipe",
             key=f"delete_{recipe['recipe']}"
         ): 
             delete_favorite(recipe["recipe"])
-            st.success("Recipe deleted!")
             st.rerun()
 
 
