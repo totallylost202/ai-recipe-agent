@@ -6,6 +6,7 @@ A Python AI recipe assistant that suggests vegetarian recipes based on available
 
 - Suggests vegetarian recipes
 - Uses OpenAI API (gpt-4o-mini)
+- Uses .env for secure API key storage
 - Supports:
   - Available ingredients
   - Calorie limits
@@ -13,14 +14,18 @@ A Python AI recipe assistant that suggests vegetarian recipes based on available
   - "Surprise Me" mode
   - Save favorite recipes
   - Prevent duplicate saved recipes
-  - Search saved recipes by name or ingredients
   - Sort saved recipes by calories
   - Delete saved recipes
   - Use session state for recipe controls
+  - Cuisine, mood, and difficulty controls
+  - Save notes for saved recipes
+  - Add, display, and search tags for saved recipes
+  - Search saved recipes by name, ingredients, shopping list, or tags
+  - Reset recipe controls and saved recipe filters
+
 - Generates:
   - Recipe suggestions
   - Shopping lists for missing ingredients
-- Uses .env for secure API key storage
 
 ---
 
@@ -44,6 +49,9 @@ text Egg Fried Rice Bowl  Ingredients: - egg - rice - soy sauce - green onion  I
 - Dictionaries
 - Functions
 - Loops and conditionals
+- Streamlit
+- JSON
+
 
 ---
 
@@ -51,7 +59,7 @@ text Egg Fried Rice Bowl  Ingredients: - egg - rice - soy sauce - green onion  I
 
 ### 1. Install dependencies
 
-bash python3 -m pip install openai python-dotenv 
+python3 -m pip install openai python-dotenv streamlit
 
 ### 2. Create a .env file
 
@@ -59,14 +67,11 @@ text OPENAI_API_KEY=your_api_key_here
 
 ### 3. Run the app
 
-bash python3 recipes.py 
+streamlit run app.py 
 
 ---
 
 ## Future Improvements
 
 - Protein filtering
-- Cuisine selection
 - Budget limits
-- JSON output formatting
-- Streamlit web interface
