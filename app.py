@@ -158,34 +158,65 @@ if st.session_state["current_recipe"]:
 with col3:
     st.button("🔄 Reset", on_click=reset_app, key="reset_app")
 
+def display_recipe_information(recipe):
+    st.write(f"🔥 {recipe['calories']} kcal")
+
+    st.subheader("🥕 Ingredients")
+    with st.expander("Show Ingredients"):
+        for item in recipe["ingredients"]:
+            st.write(f"- {item}")
+
+    st.subheader("👩‍🍳 Instructions")
+    for step in recipe["instructions"]:
+        st.write(f"- {step}")
+
+    st.subheader("🛒 Shopping List")
+    with st.expander("Show Shopping List"):
+        for item in recipe["shopping_list"]:
+            st.write(f"- {item}")
+
+def display_note(recipe, note_key):
+    st.text_area(
+        "Note",
+        value=recipe.get("note", ""),
+        key=note_key
+    )
+
+def display_saved_tags(recipe, tags_key):
+
+    st.text_input("Add tags", value=", ".join(recipe.get("tags", [])), key=tags_key)
+
+    tags_list = recipe.get("tags", [])
+
+    if tags_list:
+        st.write("🏷️ " + " | ".join(tags_list))
+    else:
+        st.write("No tags yet.")
+
+
+def clear_note(recipe, note_key):
+    add_note_to_favorite(recipe["recipe"], "")
+    st.session_state[note_key] = ""
+    st.toast("Note cleared.")
+
+
+def clear_tags(recipe, tags_key):
+    add_tags_to_favorite(recipe["recipe"], [])
+    st.session_state[tags_key] = ""
+    st.toast("Tags cleared.")
+
+
 
 def display_saved_recipe_card(recipe):
     with st.expander(recipe["recipe"]):
-        st.write(f"🔥 {recipe['calories']} kcal")
-
-        st.subheader("🥕 Ingredients")
-        with st.expander("Show Ingredients"):
-            for item in recipe["ingredients"]:
-                st.write(f"- {item}")
-
-        st.subheader("👩‍🍳 Instructions")
-        for step in recipe["instructions"]:
-            st.write(f"- {step}")
-
-        st.subheader("🛒 Shopping List")
-        with st.expander("Show Shopping List"):
-            for item in recipe["shopping_list"]:
-                st.write(f"- {item}")
+        
+        display_recipe_information(recipe)
 
         st.subheader("Personal Notes")
 
         note_key = f"note_{recipe['recipe']}"
-
-        st.text_area(
-            "Note",
-            value=recipe.get("note", ""),
-            key=note_key
-        )
+        
+        display_note(recipe, note_key)
 
         col4, col5 = st.columns(2)
 
@@ -197,28 +228,17 @@ def display_saved_recipe_card(recipe):
                 add_note_to_favorite(recipe["recipe"], st.session_state[note_key])
                 st.toast("Note saved!")
 
-        def clear_note():
-            add_note_to_favorite(recipe["recipe"], "")
-            st.session_state[note_key] = ""
-            st.toast("Note cleared.")
-
         with col5:
             st.button(
                 "Clear note",
                 on_click=clear_note,
+                args=(recipe, note_key),
                 key=f"clear_note_{recipe['recipe']}"
             )
 
         tags_key = f"tags_{recipe['recipe']}"
 
-        st.text_input("Add tags", value=", ".join(recipe.get("tags", [])), key=tags_key)
-
-        tags_list = recipe.get("tags", [])
-
-        if tags_list:
-            st.write("🏷️ " + " | ".join(tags_list))
-        else:
-            st.write("No tags yet.")
+        display_saved_tags(recipe, tags_key)
         
         col6, col7 = st.columns(2)
 
@@ -236,15 +256,11 @@ def display_saved_recipe_card(recipe):
                 add_tags_to_favorite(recipe["recipe"], tags)
                 st.toast("Tags saved!")
 
-        def clear_tags():
-            add_tags_to_favorite(recipe["recipe"], [])
-            st.session_state[tags_key] = ""
-            st.toast("Tags cleared.")
-
         with col7:
             st.button(
                 "Clear tags",
                 on_click=clear_tags,
+                args=(recipe, tags_key),
                 key=f"clear_tags_{recipe['recipe']}"
             )
 
@@ -254,7 +270,6 @@ def display_saved_recipe_card(recipe):
         ): 
             delete_favorite(recipe["recipe"])
             st.rerun()
-
 
 def display_saved_recipes():
     favorites = load_favorites()
