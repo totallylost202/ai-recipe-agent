@@ -1,6 +1,128 @@
+import base64
+import html
 import streamlit as st
 from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites, delete_favorite, add_note_to_favorite, add_tags_to_favorite
 
+
+def set_background_image(image_path):
+    with open(image_path, "rb") as image_file:
+        encoded_image = base64.b64encode(image_file.read()).decode()
+
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: linear-gradient(rgba(255, 248, 240, 0.85), rgba(255, 248, 240, 0.85)), url("data:image/png;base64,{encoded_image}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }}
+
+
+
+        .recipe-card-header {{
+            background-color: rgba(255, 248, 240, 0.88);
+            border: 1px solid rgba(255, 140, 66, 0.35);
+            border-radius: 18px;
+            padding: 18px 22px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 14px rgba(46, 46, 46, 0.12);
+        }}
+
+        .recipe-card-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }}
+
+        .recipe-card-title {{
+            font-size: 1.45rem;
+            font-weight: 700;
+        }}
+
+        .recipe-card-calories {{
+            font-size: 1.25rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }}
+
+        .recipe-card-tags {{
+            margin-top: 10px;
+            font-size: 0.95rem;
+        }}
+
+        .recipe-card-extra {{
+            margin-top: 10px;
+            font-size: 0.95rem;
+        }}
+
+        .recipe-section-card {{
+            background-color: rgba(255, 248, 240, 0.88);
+            border: 1px solid rgba(255, 140, 66, 0.35);
+            border-radius: 9px;
+            padding: 10px 15px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 7px rgba(46, 46, 46, 0.12);
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+def display_recipe_section(title, items):
+    list_items = ""
+    for item in items:
+        list_items += "<li>" + html.escape(str(item)) + "</li>"
+
+    title = html.escape(title)
+
+    st.markdown(
+        f"""
+        <div class="recipe-section-card">
+        <h4>{title}</h4>
+
+        <ul>{list_items}</ul>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+def display_recipe_information(recipe):
+
+    display_recipe_section("🥕 Ingredients", recipe["ingredients"])
+
+    display_recipe_section("👩‍🍳 Instructions", recipe["instructions"])
+
+    display_recipe_section("🛒 Shopping List", recipe["shopping_list"])
+
+
+def display_recipe_card_header(recipe, extra_ingredients=None):
+    recipe_name = html.escape(recipe["recipe"])
+    calories = html.escape(str(recipe["calories"]))
+    tags_list = recipe.get("tags", [])
+    tags_text = html.escape(" | ".join(tags_list)) if tags_list else "No tags yet."
+    if extra_ingredients is not None:
+        extra_ingredients_text = f"Extra ingredients: {extra_ingredients}"
+        safe_extra_ingredients_text = html.escape(extra_ingredients_text)
+        extra_ingredients_html = f"<div class='recipe-card-extra'>{safe_extra_ingredients_text}</div>"
+    else:
+        extra_ingredients_html = ""
+
+    st.markdown(
+        f"""
+        <div class="recipe-card-header">
+            <div class="recipe-card-row">
+                <div class="recipe-card-title">🍽️ {recipe_name}</div>
+                <div class="recipe-card-calories">🔥 {calories} kcal</div>
+            </div>
+            <div class="recipe-card-tags">🏷️ {tags_text}</div>
+            {extra_ingredients_html}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 def display_recipe(data, extra_ingredients=None):
     if data["recipe"] == "Error":
@@ -8,31 +130,10 @@ def display_recipe(data, extra_ingredients=None):
         st.write(data.get("raw_response"))
     else:
         st.success("Recipe generated!")
+        
+        display_recipe_card_header(data, extra_ingredients)
 
-        st.subheader(data["recipe"])
-
-        metric_col1, metric_col2 = st.columns(2)
-
-        with metric_col1:
-            st.metric("Calories", data["calories"])
-
-        if extra_ingredients is not None:
-            with metric_col2:
-                st.metric("Extra ingredients", extra_ingredients)
-
-        st.subheader("🥕 Ingredients")
-        with st.expander("Show Ingredients"):
-            for item in data["ingredients"]:
-                st.write(f"- {item}")
-
-        st.subheader("🛒 Shopping List")
-        with st.expander("Show Shopping List"):
-            for item in data["shopping_list"]:
-                st.write(f"- {item}")
-
-        st.subheader("👩‍🍳 Instructions")
-        for step in data["instructions"]:
-            st.write(f"- {step}")
+        display_recipe_information(data)
 
         if st.button("Save recipe"):
             current_recipe_name = st.session_state["current_recipe"]["recipe"]
@@ -58,6 +159,7 @@ def reset_app():
     st.session_state["ingredients"] = ""
     st.session_state["calorie_limit"] = 100
     st.session_state["extra_ingredients"] = 0
+    st.session_state["current_recipe_type"] = None
 
 
 def reset_favorites_search():
@@ -67,6 +169,9 @@ def reset_favorites_search():
 
 if "current_recipe" not in st.session_state:
     st.session_state["current_recipe"] = None
+
+if "current_recipe_type" not in st.session_state:
+    st.session_state["current_recipe_type"] = None
 
 if "saved" not in st.session_state:
     st.session_state["saved"] = False
@@ -89,6 +194,7 @@ if "difficulty" not in st.session_state:
 if "cuisine" not in st.session_state:
     st.session_state["cuisine"] = "Any"
 
+set_background_image("assets/paris-cafe.png")
 st.title("AI Recipe Agent")
 
 st.text_input("Enter ingredients", placeholder="egg, rice, tofu", key="ingredients")
@@ -138,6 +244,7 @@ with col1:
                 )
 
             st.session_state["current_recipe"] = data
+            st.session_state["current_recipe_type"] = "custom"
             st.session_state["saved"] = False
         else:
             st.error("Please enter ingredients.")
@@ -148,32 +255,22 @@ with col2:
             data = suggest_random_recipe()
             st.session_state["current_recipe"] = data
             st.session_state["saved"] = False
+            st.session_state["current_recipe_type"] = "surprise"
 
 if st.session_state["current_recipe"]:
-    display_recipe(
+    if st.session_state["current_recipe_type"] == "custom":
+        display_recipe(
         st.session_state["current_recipe"],
         st.session_state["extra_ingredients"]
-    )
+        )
+    elif st.session_state["current_recipe_type"] == "surprise":
+        display_recipe(
+        st.session_state["current_recipe"],
+        None)
+
 
 with col3:
     st.button("🔄 Reset", on_click=reset_app, key="reset_app")
-
-def display_recipe_information(recipe):
-    st.write(f"🔥 {recipe['calories']} kcal")
-
-    st.subheader("🥕 Ingredients")
-    with st.expander("Show Ingredients"):
-        for item in recipe["ingredients"]:
-            st.write(f"- {item}")
-
-    st.subheader("👩‍🍳 Instructions")
-    for step in recipe["instructions"]:
-        st.write(f"- {step}")
-
-    st.subheader("🛒 Shopping List")
-    with st.expander("Show Shopping List"):
-        for item in recipe["shopping_list"]:
-            st.write(f"- {item}")
 
 def display_note(recipe, note_key):
     st.text_area(
@@ -206,10 +303,12 @@ def clear_tags(recipe, tags_key):
     st.toast("Tags cleared.")
 
 
-
 def display_saved_recipe_card(recipe):
     with st.expander(recipe["recipe"]):
+        display_recipe_card_header(recipe)
         
+        st.divider()
+
         display_recipe_information(recipe)
 
         st.subheader("Personal Notes")
@@ -239,7 +338,7 @@ def display_saved_recipe_card(recipe):
         tags_key = f"tags_{recipe['recipe']}"
 
         display_saved_tags(recipe, tags_key)
-        
+
         col6, col7 = st.columns(2)
 
         with col6:
@@ -247,6 +346,7 @@ def display_saved_recipe_card(recipe):
                 "Save tags",
                 key=f"save_tags_{recipe['recipe']}"
             ):
+
                 tags = [
                     tag.strip()
                     for tag in st.session_state[tags_key].split(",")
@@ -270,6 +370,7 @@ def display_saved_recipe_card(recipe):
         ): 
             delete_favorite(recipe["recipe"])
             st.rerun()
+
 
 def display_saved_recipes():
     favorites = load_favorites()
