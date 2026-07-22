@@ -2,7 +2,7 @@ import base64
 import html
 import streamlit as st
 from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites, delete_favorite, add_note_to_favorite, add_tags_to_favorite
-
+from datetime import date
 
 def set_background_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -145,7 +145,9 @@ def display_recipe(data, extra_ingredients=None):
             if already_saved:
                 st.warning("Already saved!")
             else:
-                save_favorite(st.session_state["current_recipe"])
+                saved_recipe = st.session_state["current_recipe"].copy()
+                saved_recipe["created_at"] = date.today().isoformat()
+                save_favorite(saved_recipe)
                 st.toast("Recipe saved!")
 
 
@@ -257,16 +259,16 @@ with col2:
             st.session_state["saved"] = False
             st.session_state["current_recipe_type"] = "surprise"
 
+
+
 if st.session_state["current_recipe"]:
+    extra_ingredients = None
     if st.session_state["current_recipe_type"] == "custom":
-        display_recipe(
+        extra_ingredients = st.session_state["extra_ingredients"] 
+    display_recipe(
         st.session_state["current_recipe"],
-        st.session_state["extra_ingredients"]
-        )
-    elif st.session_state["current_recipe_type"] == "surprise":
-        display_recipe(
-        st.session_state["current_recipe"],
-        None)
+        extra_ingredients
+    )
 
 
 with col3:
@@ -308,6 +310,10 @@ def display_saved_recipe_card(recipe):
         display_recipe_card_header(recipe)
         
         st.divider()
+
+        created_at = recipe.get("created_at", "Unknown date")
+
+        st.write(f"📆 Saved on: {created_at}")
 
         display_recipe_information(recipe)
 
