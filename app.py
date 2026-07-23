@@ -264,7 +264,7 @@ with col2:
 if st.session_state["current_recipe"]:
     extra_ingredients = None
     if st.session_state["current_recipe_type"] == "custom":
-        extra_ingredients = st.session_state["extra_ingredients"] 
+        extra_ingredients = st.session_state["extra_ingredients"]
     display_recipe(
         st.session_state["current_recipe"],
         extra_ingredients
@@ -308,10 +308,10 @@ def clear_tags(recipe, tags_key):
 def display_saved_recipe_card(recipe):
     with st.expander(recipe["recipe"]):
         display_recipe_card_header(recipe)
-        
-        st.divider()
 
         created_at = recipe.get("created_at", "Unknown date")
+        
+        st.divider()
 
         st.write(f"📆 Saved on: {created_at}")
 
@@ -409,11 +409,14 @@ def display_saved_recipes():
                 )
             ]
 
+
             st.selectbox(
                 "Order",
-                ["Low to High", "High to Low"],
+                ["Low to High", "High to Low", "Oldest to Newest", "Newest to Oldest"],
                 key="sort_order"
             )
+
+            sort_order = st.session_state["sort_order"]
 
             st.button(
                 "🔄 Reset saved filters",
@@ -421,11 +424,33 @@ def display_saved_recipes():
                 key="reset_saved_filters"
             )
 
-            displayed_recipes = sorted(
-                displayed_recipes,
-                key=lambda recipe: recipe["calories"],
-                reverse=st.session_state["sort_order"] == "High to Low"
-            )
+            if sort_order == "Low to High":
+                displayed_recipes = sorted(
+                    displayed_recipes,
+                    key=lambda recipe: recipe["calories"],
+                    reverse=False
+                )
+
+            elif sort_order == "High to Low":
+                displayed_recipes = sorted(
+                    displayed_recipes,
+                    key=lambda recipe: recipe["calories"],
+                    reverse=True
+                )
+
+            elif sort_order == "Oldest to Newest":
+                displayed_recipes = sorted(
+                    displayed_recipes,
+                    key=lambda recipe: recipe.get("created_at", ""),
+                    reverse=False
+                )
+
+            elif sort_order == "Newest to Oldest":
+                displayed_recipes = sorted(
+                    displayed_recipes,
+                    key=lambda recipe: recipe.get("created_at", ""),
+                    reverse=True
+                )
 
             if displayed_recipes:
                 if search_text:
