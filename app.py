@@ -65,6 +65,15 @@ def set_background_image(image_path):
             margin-bottom: 16px;
             box-shadow: 0 2px 7px rgba(46, 46, 46, 0.12);
         }}
+
+        .personal-section-card {{
+            background-color: rgba(255, 248, 240, 0.88);
+            border: 1px solid rgba(255, 140, 66, 0.35);
+            border-radius: 9px;
+            padding: 10px 15px;
+            margin-bottom: 6px;
+            box-shadow: 0 2px 7px rgba(46, 46, 46, 0.12);
+        }}
         </style>
         """,
         unsafe_allow_html=True
@@ -166,7 +175,7 @@ def reset_app():
 
 def reset_favorites_search():
     st.session_state["search_word"] = ""
-    st.session_state["sort_order"] = "Low to High"
+    st.session_state["sort_order"] = "Calories: Low to High"
 
 
 if "current_recipe" not in st.session_state:
@@ -310,14 +319,24 @@ def display_saved_recipe_card(recipe):
         display_recipe_card_header(recipe)
 
         created_at = recipe.get("created_at", "Unknown date")
-        
-        st.divider()
 
         st.write(f"📆 Saved on: {created_at}")
 
+        st.divider()
+
         display_recipe_information(recipe)
 
-        st.subheader("Personal Notes")
+        st.divider()
+
+        st.markdown(
+            f"""
+            <div class="personal-section-card">
+            <h4>📝 Personal Notes</h4>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         note_key = f"note_{recipe['recipe']}"
         
@@ -340,6 +359,18 @@ def display_saved_recipe_card(recipe):
                 args=(recipe, note_key),
                 key=f"clear_note_{recipe['recipe']}"
             )
+
+        st.divider()
+
+        st.markdown(
+            """
+            <div class="personal-section-card">
+            <h4>🏷️ Personal Tags</h4>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         tags_key = f"tags_{recipe['recipe']}"
 
@@ -389,7 +420,7 @@ def display_saved_recipes():
                 st.session_state["search_word"] = ""
 
             if "sort_order" not in st.session_state:
-                st.session_state["sort_order"] = "Low to High"
+                st.session_state["sort_order"] = "Calories: Low to High"
 
             st.text_input(
                 "Search saved recipes",
@@ -412,7 +443,7 @@ def display_saved_recipes():
 
             st.selectbox(
                 "Order",
-                ["Low to High", "High to Low", "Oldest to Newest", "Newest to Oldest"],
+                ["Calories: Low to High", "Calories: High to Low", "Saved date: Oldest first", "Saved date: Newest first"],
                 key="sort_order"
             )
 
@@ -424,28 +455,28 @@ def display_saved_recipes():
                 key="reset_saved_filters"
             )
 
-            if sort_order == "Low to High":
+            if sort_order == "Calories: Low to High":
                 displayed_recipes = sorted(
                     displayed_recipes,
                     key=lambda recipe: recipe["calories"],
                     reverse=False
                 )
 
-            elif sort_order == "High to Low":
+            elif sort_order == "Calories: High to Low":
                 displayed_recipes = sorted(
                     displayed_recipes,
                     key=lambda recipe: recipe["calories"],
                     reverse=True
                 )
 
-            elif sort_order == "Oldest to Newest":
+            elif sort_order == "Saved date: Oldest first":
                 displayed_recipes = sorted(
                     displayed_recipes,
                     key=lambda recipe: recipe.get("created_at", ""),
                     reverse=False
                 )
 
-            elif sort_order == "Newest to Oldest":
+            elif sort_order == "Saved date: Newest first":
                 displayed_recipes = sorted(
                     displayed_recipes,
                     key=lambda recipe: recipe.get("created_at", ""),
