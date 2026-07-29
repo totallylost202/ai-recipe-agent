@@ -74,6 +74,11 @@ def set_background_image(image_path):
             margin-bottom: 6px;
             box-shadow: 0 2px 7px rgba(46, 46, 46, 0.12);
         }}
+
+        .personal-section-card h4 {{
+            margin: 0;
+        }}
+
         </style>
         """,
         unsafe_allow_html=True
@@ -329,13 +334,12 @@ def display_saved_recipe_card(recipe):
         st.divider()
 
         st.markdown(
-            f"""
+            """
             <div class="personal-section-card">
             <h4>📝 Personal Notes</h4>
 
             </div>
             """,
-            unsafe_allow_html=True
         )
 
         note_key = f"note_{recipe['recipe']}"
@@ -416,6 +420,13 @@ def display_saved_recipes():
     else:
         with st.expander(f"📚 Saved recipes ({len(favorites)})"):
 
+            st.markdown(
+                """
+                #### 🔎 Filter saved recipes
+                """,
+                unsafe_allow_html=True
+            )
+
             if "search_word" not in st.session_state:
                 st.session_state["search_word"] = ""
 
@@ -483,6 +494,12 @@ def display_saved_recipes():
                     reverse=True
                 )
 
+            st.write("")
+            st.markdown(
+                """
+                #### 🍽️ Recipe list
+                """,
+            )
             if displayed_recipes:
                 if search_text:
                     if len(displayed_recipes) == 1:
