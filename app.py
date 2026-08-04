@@ -176,6 +176,7 @@ def reset_app():
     st.session_state["calorie_limit"] = 100
     st.session_state["extra_ingredients"] = 0
     st.session_state["current_recipe_type"] = None
+    st.session_state["delete_confirmation"] = None
 
 
 def reset_favorites_search():
@@ -210,10 +211,15 @@ if "difficulty" not in st.session_state:
 if "cuisine" not in st.session_state:
     st.session_state["cuisine"] = "Any"
 
+if "delete_confirmation" not in st.session_state:
+    st.session_state["delete_confirmation"] = None
+
 set_background_image("assets/paris-cafe.png")
 st.title("AI Recipe Agent")
 
 st.text_input("Enter ingredients", placeholder="egg, rice, tofu", key="ingredients")
+
+ingredient_error = st.empty()
 
 st.number_input("Calorie limit", min_value=100, step=50, key="calorie_limit")
 
@@ -263,7 +269,7 @@ with col1:
             st.session_state["current_recipe_type"] = "custom"
             st.session_state["saved"] = False
         else:
-            st.error("Please enter ingredients.")
+            ingredient_error.error("Please enter ingredients.")
 
 with col2:
     if st.button("🎲 Surprise Me"):
@@ -340,6 +346,7 @@ def display_saved_recipe_card(recipe):
 
             </div>
             """,
+            unsafe_allow_html=True
         )
 
         note_key = f"note_{recipe['recipe']}"
@@ -405,12 +412,21 @@ def display_saved_recipe_card(recipe):
                 key=f"clear_tags_{recipe['recipe']}"
             )
 
-        if st.button(
-            "🗑️ Delete recipe",
-            key=f"delete_{recipe['recipe']}"
-        ): 
-            delete_favorite(recipe["recipe"])
-            st.rerun()
+        if st.session_state["delete_confirmation"] == recipe["recipe"]:
+            st.write("Are you sure?")
+            if st.button("Confirm", key=f"confirm_delete_{recipe['recipe']}"):
+                delete_favorite(recipe["recipe"])
+                st.rerun()
+            if st.button("Cancel", key=f"cancel_delete_{recipe['recipe']}"):
+                st.session_state["delete_confirmation"] = None
+                st.rerun()
+        else:
+            if st.button(
+                "🗑️ Delete recipe",
+                key=f"delete_{recipe['recipe']}"
+            ): 
+                st.session_state["delete_confirmation"] = recipe["recipe"]
+                st.rerun()
 
 
 def display_saved_recipes():
