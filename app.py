@@ -4,6 +4,35 @@ import streamlit as st
 from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites, delete_favorite, add_note_to_favorite, add_tags_to_favorite
 from datetime import date
 
+def initialize_session_state():
+    if "current_recipe" not in st.session_state:
+        st.session_state["current_recipe"] = None
+
+    if "current_recipe_type" not in st.session_state:
+        st.session_state["current_recipe_type"] = None
+
+    if "calorie_limit" not in st.session_state:
+        st.session_state["calorie_limit"] = 100
+
+    if "extra_ingredients" not in st.session_state:
+        st.session_state["extra_ingredients"] = 0
+
+    if "ingredients" not in st.session_state:
+        st.session_state["ingredients"] = ""
+
+    if "mood" not in st.session_state:
+        st.session_state["mood"] = "Any"
+
+    if "difficulty" not in st.session_state:
+        st.session_state["difficulty"] = "Easy"
+
+    if "cuisine" not in st.session_state:
+        st.session_state["cuisine"] = "Any"
+
+    if "delete_confirmation" not in st.session_state:
+        st.session_state["delete_confirmation"] = None
+
+
 def set_background_image(image_path):
     with open(image_path, "rb") as image_file:
         encoded_image = base64.b64encode(image_file.read()).decode()
@@ -168,7 +197,6 @@ def display_recipe(data, extra_ingredients=None):
 # Reset function for the app
 def reset_app():
     st.session_state["current_recipe"] = None
-    st.session_state["saved"] = False
     st.session_state["cuisine"] = "Any"
     st.session_state["mood"] = "Any"
     st.session_state["difficulty"] = "Easy"
@@ -183,36 +211,7 @@ def reset_favorites_search():
     st.session_state["search_word"] = ""
     st.session_state["sort_order"] = "Calories: Low to High"
 
-
-if "current_recipe" not in st.session_state:
-    st.session_state["current_recipe"] = None
-
-if "current_recipe_type" not in st.session_state:
-    st.session_state["current_recipe_type"] = None
-
-if "saved" not in st.session_state:
-    st.session_state["saved"] = False
-
-if "calorie_limit" not in st.session_state:
-    st.session_state["calorie_limit"] = 100
-
-if "extra_ingredients" not in st.session_state:
-    st.session_state["extra_ingredients"] = 0
-
-if "ingredients" not in st.session_state:
-    st.session_state["ingredients"] = ""
-
-if "mood" not in st.session_state:
-    st.session_state["mood"] = "Any"
-
-if "difficulty" not in st.session_state:
-    st.session_state["difficulty"] = "Easy"
-
-if "cuisine" not in st.session_state:
-    st.session_state["cuisine"] = "Any"
-
-if "delete_confirmation" not in st.session_state:
-    st.session_state["delete_confirmation"] = None
+initialize_session_state()
 
 set_background_image("assets/paris-cafe.png")
 st.title("AI Recipe Agent")
@@ -252,9 +251,13 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     if st.button("Generate Recipe"):
-        if st.session_state["ingredients"]:
-            food = [i.strip().lower() for i in st.session_state["ingredients"].split(",")]
+        food = [
+            ingredient.strip().lower()
+            for ingredient in st.session_state["ingredients"].split(",")
+            if ingredient.strip()
+        ]
 
+        if food:
             with st.spinner("Generating recipe..."):
                 data = suggest_recipe(
                     food,
@@ -267,7 +270,6 @@ with col1:
 
             st.session_state["current_recipe"] = data
             st.session_state["current_recipe_type"] = "custom"
-            st.session_state["saved"] = False
         else:
             ingredient_error.error("Please enter ingredients.")
 
@@ -276,10 +278,7 @@ with col2:
         with st.spinner("Generating random recipe..."):
             data = suggest_random_recipe()
             st.session_state["current_recipe"] = data
-            st.session_state["saved"] = False
             st.session_state["current_recipe_type"] = "surprise"
-
-
 
 if st.session_state["current_recipe"]:
     extra_ingredients = None
@@ -440,7 +439,6 @@ def display_saved_recipes():
                 """
                 #### 🔎 Filter saved recipes
                 """,
-                unsafe_allow_html=True
             )
 
             if "search_word" not in st.session_state:
