@@ -32,6 +32,11 @@ def initialize_session_state():
     if "delete_confirmation" not in st.session_state:
         st.session_state["delete_confirmation"] = None
 
+    if "search_word" not in st.session_state:
+        st.session_state["search_word"] = ""
+
+    if "sort_order" not in st.session_state:
+        st.session_state["sort_order"] = "Calories: Low to High"
 
 def set_background_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -427,6 +432,17 @@ def display_saved_recipe_card(recipe):
                 st.session_state["delete_confirmation"] = recipe["recipe"]
                 st.rerun()
 
+def filter_saved_recipes(favorites, search_text):
+    return [
+        recipe
+        for recipe in favorites
+        if (
+            search_text in recipe["recipe"].lower()
+            or search_text in " ".join(recipe["ingredients"]).lower()
+            or search_text in " ".join(recipe["shopping_list"]).lower()
+            or search_text in " ".join(recipe.get("tags", [])).lower()
+        )
+    ]
 
 def display_saved_recipes():
     favorites = load_favorites()
@@ -441,29 +457,14 @@ def display_saved_recipes():
                 """,
             )
 
-            if "search_word" not in st.session_state:
-                st.session_state["search_word"] = ""
-
-            if "sort_order" not in st.session_state:
-                st.session_state["sort_order"] = "Calories: Low to High"
-
             st.text_input(
                 "Search saved recipes",
                 key="search_word"
             )
 
-            search_text = st.session_state["search_word"].lower()
+            search_text = st.session_state["search_word"].strip().lower()
 
-            displayed_recipes = [
-                recipe
-                for recipe in favorites
-                if (
-                    search_text in recipe["recipe"].lower()
-                    or search_text in " ".join(recipe["ingredients"]).lower()
-                    or search_text in " ".join(recipe["shopping_list"]).lower()
-                    or search_text in " ".join(recipe.get("tags", [])).lower()
-                )
-            ]
+            displayed_recipes = filter_saved_recipes(favorites, search_text)
 
 
             st.selectbox(
@@ -514,13 +515,14 @@ def display_saved_recipes():
                 #### 🍽️ Recipe list
                 """,
             )
-            if displayed_recipes:
-                if search_text:
-                    if len(displayed_recipes) == 1:
-                        st.write("1 recipe found!")
-                    else:
-                        st.write(f"{len(displayed_recipes)} recipes found!")
 
+            if search_text:
+                if len(displayed_recipes) == 1:
+                    st.write("1 recipe found!")
+                else:
+                    st.write(f"{len(displayed_recipes)} recipes found!")
+
+            if displayed_recipes:
                 for recipe in displayed_recipes:
                     display_saved_recipe_card(recipe)
             else:
