@@ -118,6 +118,37 @@ def set_background_image(image_path):
         unsafe_allow_html=True
     )
 
+def sort_saved_recipes(displayed_recipes, sort_order):
+    if sort_order == "Calories: Low to High":
+        displayed_recipes = sorted(
+            displayed_recipes,
+            key=lambda recipe: recipe["calories"],
+            reverse=False
+        )
+
+    elif sort_order == "Calories: High to Low":
+        displayed_recipes = sorted(
+            displayed_recipes,
+            key=lambda recipe: recipe["calories"],
+            reverse=True
+        )
+
+    elif sort_order == "Saved date: Oldest first":
+        displayed_recipes = sorted(
+            displayed_recipes,
+            key=lambda recipe: recipe.get("created_at", ""),
+            reverse=False
+        )
+
+    elif sort_order == "Saved date: Newest first":
+        displayed_recipes = sorted(
+            displayed_recipes,
+            key=lambda recipe: recipe.get("created_at", ""),
+            reverse=True
+        )
+
+    return displayed_recipes
+
 def display_recipe_section(title, items):
     list_items = ""
     for item in items:
@@ -416,6 +447,8 @@ def display_saved_recipe_card(recipe):
                 key=f"clear_tags_{recipe['recipe']}"
             )
 
+        st.session_state["delete_confirmation"] = None
+
         if st.session_state["delete_confirmation"] == recipe["recipe"]:
             st.write("Are you sure?")
             if st.button("Confirm", key=f"confirm_delete_{recipe['recipe']}"):
@@ -465,8 +498,7 @@ def display_saved_recipes():
             search_text = st.session_state["search_word"].strip().lower()
 
             displayed_recipes = filter_saved_recipes(favorites, search_text)
-
-
+            
             st.selectbox(
                 "Order",
                 ["Calories: Low to High", "Calories: High to Low", "Saved date: Oldest first", "Saved date: Newest first"],
@@ -475,39 +507,13 @@ def display_saved_recipes():
 
             sort_order = st.session_state["sort_order"]
 
+            displayed_recipes = sort_saved_recipes(displayed_recipes, sort_order)
+
             st.button(
                 "🔄 Reset saved filters",
                 on_click=reset_favorites_search,
                 key="reset_saved_filters"
             )
-
-            if sort_order == "Calories: Low to High":
-                displayed_recipes = sorted(
-                    displayed_recipes,
-                    key=lambda recipe: recipe["calories"],
-                    reverse=False
-                )
-
-            elif sort_order == "Calories: High to Low":
-                displayed_recipes = sorted(
-                    displayed_recipes,
-                    key=lambda recipe: recipe["calories"],
-                    reverse=True
-                )
-
-            elif sort_order == "Saved date: Oldest first":
-                displayed_recipes = sorted(
-                    displayed_recipes,
-                    key=lambda recipe: recipe.get("created_at", ""),
-                    reverse=False
-                )
-
-            elif sort_order == "Saved date: Newest first":
-                displayed_recipes = sorted(
-                    displayed_recipes,
-                    key=lambda recipe: recipe.get("created_at", ""),
-                    reverse=True
-                )
 
             st.write("")
             st.markdown(
