@@ -118,6 +118,13 @@ def set_background_image(image_path):
         unsafe_allow_html=True
     )
 
+def display_search_result_count(displayed_recipes, search_text):
+    if search_text:
+        if len(displayed_recipes) == 1:
+            st.write("1 recipe found!")
+        else:
+            st.write(f"{len(displayed_recipes)} recipes found!")
+
 def sort_saved_recipes(displayed_recipes, sort_order):
     if sort_order == "Calories: Low to High":
         displayed_recipes = sorted(
@@ -447,8 +454,6 @@ def display_saved_recipe_card(recipe):
                 key=f"clear_tags_{recipe['recipe']}"
             )
 
-        st.session_state["delete_confirmation"] = None
-
         if st.session_state["delete_confirmation"] == recipe["recipe"]:
             st.write("Are you sure?")
             if st.button("Confirm", key=f"confirm_delete_{recipe['recipe']}"):
@@ -521,14 +526,9 @@ def display_saved_recipes():
                 #### 🍽️ Recipe list
                 """,
             )
-
-            if search_text:
-                if len(displayed_recipes) == 1:
-                    st.write("1 recipe found!")
-                else:
-                    st.write(f"{len(displayed_recipes)} recipes found!")
-
             if displayed_recipes:
+                if search_text:
+                    display_search_result_count(displayed_recipes, search_text)
                 for recipe in displayed_recipes:
                     display_saved_recipe_card(recipe)
             else:
