@@ -1,3 +1,6 @@
+#　test connection
+# another test connection
+
 import base64
 import html
 import streamlit as st
@@ -175,6 +178,28 @@ def display_recipe_section(title, items):
         unsafe_allow_html=True
     )
 
+
+def display_delete_confirmation(recipe):
+    if st.session_state["delete_confirmation"] == recipe["recipe"]:
+        st.warning(f"Are you sure you want to delete {recipe['recipe']}?")
+        col8, col9 = st.columns(2)
+        with col8:
+            if st.button("Confirm", key=f"confirm_delete_{recipe['recipe']}"):
+                delete_favorite(recipe["recipe"])
+                st.session_state["delete_confirmation"] = None
+                st.rerun()
+        with col9:
+            if st.button("Cancel", key=f"cancel_delete_{recipe['recipe']}"):
+                st.session_state["delete_confirmation"] = None
+                st.rerun()
+    else:
+        if st.button(
+            "🗑️ Delete recipe",
+            key=f"delete_{recipe['recipe']}"
+        ): 
+            st.session_state["delete_confirmation"] = recipe["recipe"]
+            st.rerun()
+
 def display_recipe_information(recipe):
 
     display_recipe_section("🥕 Ingredients", recipe["ingredients"])
@@ -235,7 +260,6 @@ def display_recipe(data, extra_ingredients=None):
                 saved_recipe["created_at"] = date.today().isoformat()
                 save_favorite(saved_recipe)
                 st.toast("Recipe saved!")
-
 
 # Reset function for the app
 def reset_app():
@@ -367,53 +391,40 @@ def clear_tags(recipe, tags_key):
     st.toast("Tags cleared.")
 
 
-def display_saved_recipe_card(recipe):
-    with st.expander(recipe["recipe"]):
-        display_recipe_card_header(recipe)
+def display_note_section(recipe):
+    st.markdown(
+        """
+        <div class="personal-section-card">
+        <h4>📝 Personal Notes</h4>
 
-        created_at = recipe.get("created_at", "Unknown date")
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-        st.write(f"📆 Saved on: {created_at}")
+    note_key = f"note_{recipe['recipe']}"
 
-        st.divider()
+    display_note(recipe, note_key)
 
-        display_recipe_information(recipe)
+    col4, col5 = st.columns(2)
 
-        st.divider()
+    with col4:
+        if st.button(
+            "Save note",
+            key=f"save_note_{recipe['recipe']}"
+        ):
+            add_note_to_favorite(recipe["recipe"], st.session_state[note_key])
+            st.toast("Note saved!")
 
-        st.markdown(
-            """
-            <div class="personal-section-card">
-            <h4>📝 Personal Notes</h4>
-
-            </div>
-            """,
-            unsafe_allow_html=True
+    with col5:
+        st.button(
+            "Clear note",
+            on_click=clear_note,
+            args=(recipe, note_key),
+            key=f"clear_note_{recipe['recipe']}"
         )
 
-        note_key = f"note_{recipe['recipe']}"
-        
-        display_note(recipe, note_key)
-
-        col4, col5 = st.columns(2)
-
-        with col4:
-            if st.button(
-                "Save note",
-                key=f"save_note_{recipe['recipe']}"
-            ):
-                add_note_to_favorite(recipe["recipe"], st.session_state[note_key])
-                st.toast("Note saved!")
-
-        with col5:
-            st.button(
-                "Clear note",
-                on_click=clear_note,
-                args=(recipe, note_key),
-                key=f"clear_note_{recipe['recipe']}"
-            )
-
-        st.divider()
+def display_tag_section(recipe):
 
         st.markdown(
             """
@@ -454,21 +465,29 @@ def display_saved_recipe_card(recipe):
                 key=f"clear_tags_{recipe['recipe']}"
             )
 
-        if st.session_state["delete_confirmation"] == recipe["recipe"]:
-            st.write("Are you sure?")
-            if st.button("Confirm", key=f"confirm_delete_{recipe['recipe']}"):
-                delete_favorite(recipe["recipe"])
-                st.rerun()
-            if st.button("Cancel", key=f"cancel_delete_{recipe['recipe']}"):
-                st.session_state["delete_confirmation"] = None
-                st.rerun()
-        else:
-            if st.button(
-                "🗑️ Delete recipe",
-                key=f"delete_{recipe['recipe']}"
-            ): 
-                st.session_state["delete_confirmation"] = recipe["recipe"]
-                st.rerun()
+def display_saved_recipe_card(recipe):
+    with st.expander(recipe["recipe"]):
+        display_recipe_card_header(recipe)
+
+        created_at = recipe.get("created_at", "Unknown date")
+
+        st.write(f"📆 Saved on: {created_at}")
+
+        st.divider()
+
+        display_recipe_information(recipe)
+
+        st.divider()
+
+        display_note_section(recipe)
+
+        st.divider()
+
+        display_tag_section(recipe)
+
+        st.divider()
+
+        display_delete_confirmation(recipe)
 
 def filter_saved_recipes(favorites, search_text):
     return [
@@ -533,6 +552,5 @@ def display_saved_recipes():
                     display_saved_recipe_card(recipe)
             else:
                 st.write("No matching recipes.")
-
 
 display_saved_recipes()
