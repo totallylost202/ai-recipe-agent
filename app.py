@@ -4,7 +4,7 @@
 import base64
 import html
 import streamlit as st
-from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites, delete_favorite, add_note_to_favorite, add_tags_to_favorite
+from recipes import suggest_recipe, suggest_random_recipe, save_favorite, load_favorites, delete_favorite, add_note_to_favorite, add_tags_to_favorite, add_rating_to_favorites
 from datetime import date
 
 def initialize_session_state():
@@ -40,6 +40,12 @@ def initialize_session_state():
 
     if "sort_order" not in st.session_state:
         st.session_state["sort_order"] = "Calories: Low to High"
+
+    if "selected_tags" not in st.session_state:
+        st.session_state["selected_tags"] = []
+
+    if "minimum_rating" not in st.session_state:
+        st.session_state["minimum_rating"] = 1
 
 def set_background_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -157,6 +163,20 @@ def sort_saved_recipes(displayed_recipes, sort_order):
             reverse=True
         )
 
+    elif sort_order == "Rating: Low to High":
+        displayed_recipes = sorted(
+            displayed_recipes,
+            key=lambda recipe: recipe.get("rating", 1),
+            reverse=False
+        )
+
+    elif sort_order == "Rating: High to Low":
+        displayed_recipes = sorted(
+            displayed_recipes,
+            key=lambda recipe: recipe.get("rating", 1),
+            reverse=True
+        )
+
     return displayed_recipes
 
 def display_recipe_section(title, items):
@@ -212,6 +232,7 @@ def display_recipe_information(recipe):
 def display_recipe_card_header(recipe, extra_ingredients=None):
     recipe_name = html.escape(recipe["recipe"])
     calories = html.escape(str(recipe["calories"]))
+    rating = recipe.get("rating")
     tags_list = recipe.get("tags", [])
     tags_text = html.escape(" | ".join(tags_list)) if tags_list else "No tags yet."
     if extra_ingredients is not None:
@@ -220,13 +241,17 @@ def display_recipe_card_header(recipe, extra_ingredients=None):
         extra_ingredients_html = f"<div class='recipe-card-extra'>{safe_extra_ingredients_text}</div>"
     else:
         extra_ingredients_html = ""
-
+    if rating is not None:
+        rating_stars = "⭐️" * rating
+    else:
+        rating_stars = ""
     st.markdown(
         f"""
         <div class="recipe-card-header">
             <div class="recipe-card-row">
                 <div class="recipe-card-title">🍽️ {recipe_name}</div>
                 <div class="recipe-card-calories">🔥 {calories} kcal</div>
+                <div class="recipe-card-rating">{rating_stars}</div>
             </div>
             <div class="recipe-card-tags">🏷️ {tags_text}</div>
             {extra_ingredients_html}
@@ -261,6 +286,15 @@ def display_recipe(data, extra_ingredients=None):
                 save_favorite(saved_recipe)
                 st.toast("Recipe saved!")
 
+def collect_tags(favorites):
+    tags_collection = set()
+    for recipe in favorites:
+        tags = recipe.get("tags", [])
+        for tag in tags:
+            tags_collection.add(tag)
+    return sorted(tags_collection)
+
+
 # Reset function for the app
 def reset_app():
     st.session_state["current_recipe"] = None
@@ -277,6 +311,8 @@ def reset_app():
 def reset_favorites_search():
     st.session_state["search_word"] = ""
     st.session_state["sort_order"] = "Calories: Low to High"
+    st.session_state["selected_tags"] = []
+    st.session_state["minimum_rating"] = 1
 
 initialize_session_state()
 
@@ -465,8 +501,27 @@ def display_tag_section(recipe):
                 key=f"clear_tags_{recipe['recipe']}"
             )
 
+def display_rating_section(recipe):
+    rating_result_key = f"rating_{recipe['recipe']}"
+    rating = recipe.get("rating", 1)
+    rating_result = st.slider("Rating", value=rating, min_value=1, max_value=5, key=rating_result_key)
+
+    if st.button(
+        "Save rating",
+        key=f"save_rating_{recipe['recipe']}"
+    ):
+        add_rating_to_favorites(recipe["recipe"], rating_result)
+        st.toast("Rating saved!")
+
+
 def display_saved_recipe_card(recipe):
-    with st.expander(recipe["recipe"]):
+    rating = recipe.get("rating")
+    if rating is not None:
+        rating_stars = "⭐️" * rating
+    else:
+        rating_stars = ""
+    expander_title = f"{recipe['recipe']} {rating_stars}"
+    with st.expander(expander_title):
         display_recipe_card_header(recipe)
 
         created_at = recipe.get("created_at", "Unknown date")
@@ -487,9 +542,13 @@ def display_saved_recipe_card(recipe):
 
         st.divider()
 
+        display_rating_section(recipe)
+
+        st.divider()
+
         display_delete_confirmation(recipe)
 
-def filter_saved_recipes(favorites, search_text):
+def filter_saved_recipes(favorites, search_text, selected_tags, minimum_rating):
     return [
         recipe
         for recipe in favorites
@@ -499,6 +558,18 @@ def filter_saved_recipes(favorites, search_text):
             or search_text in " ".join(recipe["shopping_list"]).lower()
             or search_text in " ".join(recipe.get("tags", [])).lower()
         )
+        and (
+            not selected_tags
+            or any(
+                tag in recipe.get("tags", [])
+                for tag in selected_tags
+            )
+        )
+
+        and (
+            recipe.get("rating", 1) >= minimum_rating
+        )
+
     ]
 
 def display_saved_recipes():
@@ -521,11 +592,21 @@ def display_saved_recipes():
 
             search_text = st.session_state["search_word"].strip().lower()
 
-            displayed_recipes = filter_saved_recipes(favorites, search_text)
+            collected_tags = collect_tags(favorites)
+
+            selected_tags = st.multiselect(
+                "Filter by tags", 
+                options=collected_tags, 
+                key="selected_tags"
+            )
+
+            minimum_rating = st.slider("Minimum Rating", min_value=1, max_value=5, key="minimum_rating")
+
+            displayed_recipes = filter_saved_recipes(favorites, search_text, selected_tags, minimum_rating)
             
             st.selectbox(
                 "Order",
-                ["Calories: Low to High", "Calories: High to Low", "Saved date: Oldest first", "Saved date: Newest first"],
+                ["Calories: Low to High", "Calories: High to Low", "Saved date: Oldest first", "Saved date: Newest first", "Rating: Low to High", "Rating: High to Low"],
                 key="sort_order"
             )
 
