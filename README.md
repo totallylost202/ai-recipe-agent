@@ -20,8 +20,9 @@ A Python AI recipe assistant that suggests vegetarian recipes based on available
   - Cuisine, mood, and difficulty controls
   - Save notes for saved recipes
   - Add, display, and search tags for saved recipes
-  - Search saved recipes by name, ingredients, shopping list, or tags
+  - Search saved recipes by name, ingredients, shopping list, rating, or tags
   - Reset recipe controls and saved recipe filters
+  - Rate recipes 
 
 - Generates:
   - Recipe suggestions
